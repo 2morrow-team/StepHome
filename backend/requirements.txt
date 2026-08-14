@@ -1,3 +1,7 @@
 # StepHome Backend 실행 패키지
 fastapi
-uvicorn
+uvicorn[standard]
+pydantic
+sqlalchemy
+python-dotenv
+httpx
