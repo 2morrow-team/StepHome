@@ -1,0 +1,45 @@
+{
+  "summary": "현재 저축 계획을 유지하면서 이용 가능한 주거지원 정책을 활용하고, 조건부 정책의 보증금 기준을 함께 검토하는 것이 좋습니다.",
+  "actions": [
+    {
+      "priority": 1,
+      "action_type": "SAVING",
+      "timing": "NOW",
+      "title": "월 저축계획 유지",
+      "description": "현재 월 500000원의 저축을 유지합니다.",
+      "reason": "희망 독립일까지 필요한 월 저축액 500000원을 현재 충족하고 있습니다.",
+      "policy_id": null,
+      "due_date": null
+    },
+    {
+      "priority": 2,
+      "action_type": "POLICY",
+      "timing": "NOW",
+      "title": "청년 월세 지원 신청 준비",
+      "description": "신청기간과 필요서류를 확인하고 정책 신청을 준비합니다.",
+      "reason": "현재 이용 가능한 정책으로 월 주거비 부담을 줄이는 데 활용할 수 있습니다.",
+      "policy_id": 101,
+      "due_date": "2026-08-31"
+    },
+    {
+      "priority": 3,
+      "action_type": "HOUSING",
+      "timing": "SEARCH_HOUSE",
+      "title": "보증금 조건 조정 검토",
+      "description": "조건부 정책의 보증금 기준을 확인하고 목표 보증금 조정 가능성을 검토합니다.",
+      "reason": "현재 보증금 관련 조건을 충족하지 못한 정책이 있어 조건 변경 시 활용 가능성이 있습니다.",
+      "policy_id": 102,
+      "due_date": null
+    },
+    {
+      "priority": 4,
+      "action_type": "CONTRACT",
+      "timing": "BEFORE_CONTRACT",
+      "title": "계약 전 안전사항 확인",
+      "description": "등기부등본, 주변 시세, 보증보험 가입 가능 여부를 확인합니다.",
+      "reason": "첫 독립 과정에서 발생할 수 있는 계약 위험을 줄이기 위해 필요합니다.",
+      "policy_id": null,
+      "due_date": null
+    }
+  ]
+}

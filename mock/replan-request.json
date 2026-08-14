@@ -1,0 +1,9 @@
+{
+  "user_id": 1,
+  "target_id": 1,
+  "previous_diagnosis_id": 1,
+  "previous_plan_id": 1,
+  "changes": {
+    "deposit_budget": 4000000
+  }
+}

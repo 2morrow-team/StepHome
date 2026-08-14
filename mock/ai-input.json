@@ -1,0 +1,86 @@
+{
+  "user_id": 1,
+  "target_id": 1,
+  "diagnosis_id": 1,
+  "user": {
+    "age": 24,
+    "region": "경기도",
+    "employment_status": "EMPLOYED",
+    "monthly_income": 2500000,
+    "monthly_saving": 500000,
+    "current_savings": 5000000,
+    "current_emergency_fund": 1000000
+  },
+  "target": {
+    "target_date": "2027-01-12",
+    "monthly_rent_budget": 500000,
+    "deposit_budget": 5000000,
+    "housing_type": "MONTHLY_RENT",
+    "target_region": "서울"
+  },
+  "diagnosis": {
+    "readiness_score": 77,
+    "fund_score": 33.33,
+    "saving_score": 30.0,
+    "emergency_score": 13.33,
+    "required_initial_fund": 6000000,
+    "initial_fund_gap": 2000000,
+    "target_emergency_fund": 1500000,
+    "emergency_fund_gap": 500000,
+    "required_monthly_saving": 500000,
+    "estimated_months": 5
+  },
+  "matched_policies": [
+    {
+      "policy_id": 101,
+      "title": "청년 월세 지원",
+      "region": "서울",
+      "provider": "Demo Policy",
+      "category": "HOUSING",
+      "eligibility_status": "AVAILABLE",
+      "matched_conditions": [
+          "AGE",
+          "INCOME",
+          "HOUSING_TYPE",
+          "REGION"
+      ],
+      "failed_conditions": [],
+      "missing_conditions": [],
+      "rank": 1,
+      "support_amount": 200000,
+      "support_amount_text": "월 최대 20만원, 최대 12개월 지원",
+      "eligibility_text": "만 19~34세 등 정책 자격조건",
+      "description": "청년의 월세 부담을 완화하기 위한 주거지원 정책",
+      "application_start": "2026-08-01",
+      "application_end": "2026-08-31",
+      "source_url": "https://example.go.kr/policies/101",
+      "checked_at": "2026-08-12T14:00:00+09:00"
+    },
+    {
+      "policy_id": 102,
+      "title": "청년 주거비 지원",
+      "region": "서울",
+      "provider": "Demo Policy",
+      "category": "HOUSING",
+      "eligibility_status": "CONDITIONAL",
+      "matched_conditions": [
+          "AGE",
+          "INCOME",
+          "REGION"
+      ],
+      "failed_conditions": [
+        "DEPOSIT_LIMIT"
+      ],
+      "missing_conditions": [],
+      "rank": 2,
+      "support_amount": null,
+      "support_amount_text": "조건 충족 시 주거비 일부 지원",
+      "eligibility_text": "보증금 기준 등 추가 조건 충족 필요",
+      "description": "청년 주거비 부담 완화를 위한 지원정책",
+      "application_start": "2026-08-01",
+      "application_end": "2026-09-30",
+      "source_url": "https://example.go.kr/policies/102",
+      "checked_at": "2026-08-12T14:00:00+09:00"
+    }
+  ]
+}

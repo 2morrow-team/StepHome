@@ -1,0 +1,12 @@
+{
+  "error": {
+    "code": "INVALID_INPUT",
+    "message": "입력값을 확인해주세요.",
+    "details": [
+      {
+        "field": "current_emergency_fund",
+        "reason": "current_savings보다 클 수 없습니다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "POLICY_MATCH_FAILED",
+    "message": "정책 정보를 분석하는 중 오류가 발생했습니다."
+  }
+}

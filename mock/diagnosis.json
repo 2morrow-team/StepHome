@@ -1,0 +1,16 @@
+{
+  "diagnosis_id": 1,
+  "user_id": 1,
+  "target_id": 1,
+  "readiness_score": 77,
+  "fund_score": 33.33,
+  "saving_score": 30.0,
+  "emergency_score": 13.33,
+  "required_initial_fund": 6000000,
+  "initial_fund_gap": 2000000,
+  "target_emergency_fund": 1500000,
+  "emergency_fund_gap": 500000,
+  "required_monthly_saving": 500000,
+  "estimated_months": 5,
+  "calculated_at": "2026-08-12T15:00:00+09:00"
+}

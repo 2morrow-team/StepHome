@@ -1,0 +1,17 @@
+{
+  "user": {
+    "age": 24,
+    "region": "경기도",
+    "employment_status": "EMPLOYED",
+    "monthly_income": 2500000,
+    "monthly_saving": 500000,
+    "current_savings": 5000000,
+    "current_emergency_fund": 1000000
+  },
+  "target": {
+    "target_date": "2027-01-12",
+    "monthly_rent_budget": 500000,
+    "deposit_budget": 5000000,
+    "housing_type": "MONTHLY_RENT"
+  }
+}

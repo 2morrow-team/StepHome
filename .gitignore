@@ -1,0 +1,17 @@
+# Python 생성 파일
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node 생성 파일
+node_modules/
+dist/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# 환경변수 파일
+.env
+.env.*
+!.env.example

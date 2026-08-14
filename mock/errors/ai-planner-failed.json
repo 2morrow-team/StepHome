@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "AI_PLANNER_FAILED",
+    "message": "Action Plan 생성에 실패했습니다. 다시 시도해주세요."
+  }
+}
