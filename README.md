@@ -314,19 +314,76 @@ Backend 연결 전에는 `mock/final-response.json`과 `mock/replan-final-respon
 
 ### Backend
 
-Backend 실행:
+#### 1. Backend 디렉토리로 이동
 
 ```bash
 cd backend
+```
+
+#### 2. Python 가상환경 생성
+
+```bash
+python -m venv .venv
+```
+
+#### 3. 가상환경 활성화
+
+Windows:
+
+```bash
+.venv\Scripts\activate
+```
+
+macOS / Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+#### 4. 패키지 설치
+
+```bash
 pip install -r requirements.txt
+```
+
+#### 5. FastAPI 서버 실행
+
+```bash
 uvicorn app.main:app --reload
 ```
 
-실행 후 Swagger에서 API를 확인합니다.
+#### 6. 실행 확인
+
+Local Development Base URL:
+
+```text
+http://localhost:8000
+```
+
+FastAPI Swagger:
 
 ```text
 http://localhost:8000/docs
 ```
+
+Health Check:
+
+```text
+http://localhost:8000/api/v1/health
+```
+
+> `localhost:8000`은 각 개발자의 로컬 환경에서 실행되는 Backend 주소입니다.  
+> 다른 팀원도 Backend 코드를 받은 뒤 위 과정을 통해 자신의 컴퓨터에서 동일하게 실행할 수 있습니다.
+
+#### Production
+
+배포 이후 실제 Backend URL을 추가합니다.
+
+```text
+Production Backend URL: <배포 후 URL>
+```
+
+Frontend에서는 개발 환경과 배포 환경에 따라 Backend Base URL을 구분하여 사용합니다.
 
 ---
 
