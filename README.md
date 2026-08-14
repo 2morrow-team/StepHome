@@ -154,11 +154,19 @@ Frontend
 
 ### Backend
 
-- FastAPI
-- Diagnosis 계산
-- Policy / Rule Engine 및 AI 연결
-- 최종 응답 조합
-- Re-planning 처리
+| 영역 | 기술 | 역할 |
+| --- | --- | --- |
+| Language | Python 3.12 | Backend 전체 개발 언어 |
+| Framework | FastAPI | REST API 구현 및 Frontend·Policy·AI 연결 |
+| Data Validation | Pydantic | Request / Response JSON Schema 및 입력값 검증 |
+| ORM | SQLAlchemy | Python 객체와 DB 테이블 연결 및 데이터 처리 |
+| Local Database | SQLite | MVP 로컬 개발 및 데이터 저장 |
+| Server | Uvicorn | FastAPI 애플리케이션 실행 |
+| HTTP Client | httpx | 외부 API 및 필요 시 서비스 간 HTTP 통신 |
+| Environment | python-dotenv | `.env` 기반 API Key·DB 설정 등 환경변수 관리 |
+| Package Manager | pip + requirements.txt | Python 패키지 및 의존성 관리 |
+| API Docs / Test | FastAPI Swagger | `/docs`에서 API 명세 확인 및 직접 요청 테스트 |
+DB는 우선 SQLite로 MVP를 구현한 뒤 배포 환경에 따라 PostgreSQL 등의 도입
 
 ### Policy / Rule Engine
 
