@@ -33,7 +33,7 @@ def generate_action_plan(ai_input: dict[str, Any]) -> dict[str, Any]:
     candidates = generate_candidates(
         diagnosis=ai_input["diagnosis"],
         matched_policies=ai_input["matched_policies"],
-        monthly_saving=ai_input.get("user", {}).get("monthly_saving"),
+        monthly_saving=ai_input.get("user", {}).get("monthly_savings"),
     )
     system_prompt, user_prompt = build_plan_prompt(ai_input, candidates)
     result = _call_llm(system_prompt, user_prompt)

@@ -98,20 +98,22 @@ def build_ai_input(
 ) -> dict[str, Any]:
     user_context_fields = (
         "age",
-        "region",
+        "current_region",
         "employment_status",
-        "household_monthly_income",
+        "marital_status",
+        "youth_household_monthly_income",
+        "youth_household_size",
         "personal_monthly_income",
-        "current_savings",
-        "monthly_saving",
+        "total_assets",
+        "monthly_savings",
         "housing_status",
     )
     target_context_fields = (
-        "target_date",
-        "target_region",
-        "deposit_budget",
-        "monthly_rent_budget",
-        "housing_type",
+        "planned_move_in_date",
+        "desired_region",
+        "desired_deposit",
+        "desired_monthly_rent",
+        "desired_housing_type",
     )
     diagnosis_context_fields = (
         "readiness_score",

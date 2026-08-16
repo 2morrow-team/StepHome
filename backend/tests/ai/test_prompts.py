@@ -104,24 +104,26 @@ class TestBuildAiInput:
         return {
             "user_id": 1,
             "age": 24,
-            "region": "경기도",
+            "current_region": "GYEONGGI",
             "employment_status": "EMPLOYED",
-            "household_monthly_income": 3000000,
+            "marital_status": "UNMARRIED",
+            "youth_household_monthly_income": 3000000,
+            "youth_household_size": 1,
             "personal_monthly_income": 2500000,
-            "current_savings": 5000000,
-            "monthly_saving": 500000,
-            "housing_status": "FAMILY_HOME",
+            "total_assets": 5000000,
+            "monthly_savings": 500000,
+            "housing_status": "NO_HOME",
             "some_internal_field": "should_be_excluded",
         }
 
     def _make_target(self):
         return {
             "target_id": 1,
-            "target_date": "2027-01-12",
-            "target_region": "서울",
-            "deposit_budget": 5000000,
-            "monthly_rent_budget": 500000,
-            "housing_type": "MONTHLY_RENT",
+            "planned_move_in_date": "2027-01-12",
+            "desired_region": "SEOUL",
+            "desired_deposit": 5000000,
+            "desired_monthly_rent": 500000,
+            "desired_housing_type": "MONTHLY_RENT",
         }
 
     def test_returns_dict(self):
@@ -134,8 +136,9 @@ class TestBuildAiInput:
 
     def test_user_context_fields_present(self):
         result = build_ai_input(self._make_user(), self._make_target(), DIAGNOSIS, [])
-        for field in ("age", "employment_status", "household_monthly_income", "personal_monthly_income",
-                      "current_savings", "monthly_saving", "housing_status"):
+        for field in ("age", "employment_status", "marital_status", "youth_household_monthly_income",
+                      "youth_household_size", "personal_monthly_income", "total_assets",
+                      "monthly_savings", "housing_status"):
             assert field in result["user"]
 
     def test_no_emergency_fund_fields(self):
