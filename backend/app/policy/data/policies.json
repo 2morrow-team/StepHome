@@ -8,6 +8,7 @@
     "policy_provider": "국토교통부",
     "application_start": "2026-03-30",
     "application_end": "2026-05-29",
+    "application_period_type": "FIXED",
     "support_amount": 200000,
     "support_amount_unit": "MONTH",
     "support_amount_text": "실제 납부하는 월세 범위에서 월 최대 20만원을 최대 24개월 지원",
@@ -47,7 +48,7 @@
         "ORIGINAL_HOUSEHOLD_INCOME_REQUIREMENT"
       ]
     },
-    "source_url": "복지로 청년월세 지원사업",
+    "source_url": "https://www.bokjiro.go.kr/ssis-tbu/twataa/wlfareInfo/moveTWAT52011M.do?wlfareInfoId=WLF00004661",
     "checked_at": "2026-08-15T20:36:00"
   },
   {
@@ -59,6 +60,7 @@
     "policy_provider": "LH",
     "application_start": null,
     "application_end": null,
+    "application_period_type": "UNKNOWN",
     "support_amount": null,
     "support_amount_unit": "OTHER",
     "support_amount_text": "LH가 기존주택을 전세계약 후 입주자에게 재임대하며 임대조건은 입주순위 및 공급주택에 따라 달라짐",
@@ -111,6 +113,7 @@
     "policy_provider": "제주특별자치도 건설주택국 주택토지과",
     "application_start": null,
     "application_end": null,
+    "application_period_type": "ALWAYS_OPEN",
     "support_amount": 200000,
     "support_amount_unit": "MONTH",
     "support_amount_text": "임차료 월 최대 20만원을 최대 12개월 지원",
@@ -165,6 +168,7 @@
     "policy_provider": "주택도시기금",
     "application_start": null,
     "application_end": null,
+    "application_period_type": "ALWAYS_OPEN",
     "support_amount": 150000000,
     "support_amount_unit": "TOTAL",
     "support_amount_text": "전세자금 최대 1억 5천만원 대출. 신규계약은 전세금액의 80% 이내이며 실제 대출금액은 심사 결과에 따라 결정",
@@ -217,6 +221,7 @@
     "policy_provider": "LH",
     "application_start": null,
     "application_end": null,
+    "application_period_type": "NOTICE_BASED",
     "support_amount": null,
     "support_amount_unit": "OTHER",
     "support_amount_text": "LH가 매입한 주택을 시중시세의 40~50% 수준으로 임대",
@@ -258,7 +263,7 @@
       ]
     },
     "source_url": "https://apply.lh.or.kr/lhapply/cm/cntnts/cntntsView.do?cntntsId=201251&mi=1150",
-    "checked_at": "2026-08-16"
+    "checked_at": "2026-08-16T20:36:00"
   },
   {
     "policy_id": 6,
@@ -269,6 +274,7 @@
     "policy_provider": "서울특별시",
     "application_start": "2026-05-06",
     "application_end": "2026-05-19",
+    "application_period_type": "FIXED",
     "support_amount": 200000,
     "support_amount_unit": "MONTH",
     "support_amount_text": "월 최대 20만원의 임차료를 최대 12개월 지원하며 생애 1회 지원",
@@ -311,7 +317,7 @@
         "DUPLICATE_RENT_SUPPORT_RESTRICTION"
       ]
     },
-    "source_url": "서울주거포털 청년월세지원",
-    "checked_at": "2026-08-16"
+    "source_url": "https://housing.seoul.go.kr/site/main/content/sh01_060513",
+    "checked_at": "2026-08-16T20:36:00"
   }
 ]

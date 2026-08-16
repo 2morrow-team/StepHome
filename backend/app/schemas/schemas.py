@@ -3,7 +3,7 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 
 class EmploymentStatus(str, Enum):
@@ -16,6 +16,16 @@ class EmploymentStatus(str, Enum):
 class HousingType(str, Enum):
     MONTHLY_RENT = "MONTHLY_RENT"
     JEONSE = "JEONSE"
+
+
+class HousingStatus(str, Enum):
+    NO_HOME = "NO_HOME"
+    HAS_HOME = "HAS_HOME"
+
+
+class MaritalStatus(str, Enum):
+    UNMARRIED = "UNMARRIED"
+    MARRIED = "MARRIED"
 
 
 class EligibilityStatus(str, Enum):
@@ -48,25 +58,26 @@ class ActionStatus(str, Enum):
 class UserRequest(BaseModel):
     age: int = Field(ge=0)
     employment_status: EmploymentStatus
-    region: str = Field(min_length=1)
-    monthly_income: int = Field(ge=0)
-    current_savings: int = Field(ge=0)
-    current_emergency_fund: int = Field(ge=0)
-    monthly_saving: int = Field(gt=0)
+    current_region: str = Field(min_length=1)
 
-    @validator("current_emergency_fund")
-    def emergency_fund_must_be_within_savings(cls, value, values):
-        current_savings = values.get("current_savings")
-        if current_savings is not None and value > current_savings:
-            raise ValueError("current_emergency_fund는 current_savings보다 클 수 없습니다.")
-        return value
+    personal_monthly_income: int = Field(ge=0)
+    total_assets: int = Field(ge=0)
+    monthly_savings: int = Field(ge=0)
+
+    housing_status: HousingStatus
+
+    youth_household_monthly_income: int = Field(ge=0)
+    youth_household_size: int = Field(gt=0)
+
+    marital_status: MaritalStatus
 
 
 class TargetRequest(BaseModel):
-    target_date: date
-    monthly_rent_budget: int = Field(ge=0)
-    deposit_budget: int = Field(ge=0)
-    housing_type: HousingType
+    planned_move_in_date: date
+    desired_deposit: int = Field(ge=0)
+    desired_monthly_rent: int = Field(ge=0)
+    desired_housing_type: HousingType
+    desired_region: str = Field(min_length=1)
 
 
 class PlanRequest(BaseModel):
@@ -75,7 +86,7 @@ class PlanRequest(BaseModel):
 
 
 class ReplanChanges(BaseModel):
-    deposit_budget: Optional[int] = Field(default=None, ge=0)
+    desired_deposit: Optional[int] = Field(default=None, ge=0)
 
 
 class ReplanRequest(BaseModel):
@@ -87,23 +98,23 @@ class ReplanRequest(BaseModel):
 
 
 class TargetResponse(TargetRequest):
-    target_region: str
+    pass
 
 
 class DiagnosisResponse(BaseModel):
     diagnosis_id: int
     user_id: int
     target_id: int
+
     readiness_score: int
     fund_score: float
     saving_score: float
-    emergency_score: float
+
     required_initial_fund: int
     initial_fund_gap: int
-    target_emergency_fund: int
-    emergency_fund_gap: int
     required_monthly_saving: int
-    estimated_months: int
+
+    estimated_months: Optional[int]
     calculated_at: datetime
 
 
@@ -117,13 +128,14 @@ class PolicyMatchResponse(BaseModel):
     matched_conditions: list[str]
     failed_conditions: list[str]
     missing_conditions: list[str]
-    rank: int
+    rank: Optional[int] = None
     support_amount: Optional[int]
     support_amount_text: str
     eligibility_text: str
     description: str
-    application_start: date
-    application_end: date
+    application_start: Optional[date] = None
+    application_end: Optional[date] = None
+    application_period_type: str
     region: str
     provider: str
     category: str
