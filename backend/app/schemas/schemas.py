@@ -1,9 +1,14 @@
-# API 요청과 응답 스키마 정의
+# API 요청/응답에서 사용하는 공통 Pydantic Schema
+
 from datetime import date, datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field
+
+
+# =========================================================
+# Enum
+# =========================================================
 
 
 class EmploymentStatus(str, Enum):
@@ -26,6 +31,47 @@ class HousingStatus(str, Enum):
 class MaritalStatus(str, Enum):
     UNMARRIED = "UNMARRIED"
     MARRIED = "MARRIED"
+
+
+class Region(str, Enum):
+    NATIONAL = "NATIONAL"
+    SEOUL = "SEOUL"
+    BUSAN = "BUSAN"
+    DAEGU = "DAEGU"
+    INCHEON = "INCHEON"
+    GWANGJU = "GWANGJU"
+    DAEJEON = "DAEJEON"
+    ULSAN = "ULSAN"
+    SEJONG = "SEJONG"
+    GYEONGGI = "GYEONGGI"
+    GANGWON = "GANGWON"
+    CHUNGBUK = "CHUNGBUK"
+    CHUNGNAM = "CHUNGNAM"
+    JEONBUK = "JEONBUK"
+    JEONNAM = "JEONNAM"
+    GYEONGBUK = "GYEONGBUK"
+    GYEONGNAM = "GYEONGNAM"
+    JEJU = "JEJU"
+
+
+class PolicyCategory(str, Enum):
+    LOAN = "LOAN"
+    RENT_SUPPORT = "RENT_SUPPORT"
+    PUBLIC_RENTAL = "PUBLIC_RENTAL"
+
+
+class SupportAmountUnit(str, Enum):
+    MONTH = "MONTH"
+    YEAR = "YEAR"
+    TOTAL = "TOTAL"
+    OTHER = "OTHER"
+
+
+class ApplicationPeriodType(str, Enum):
+    FIXED = "FIXED"
+    ALWAYS_OPEN = "ALWAYS_OPEN"
+    NOTICE_BASED = "NOTICE_BASED"
+    UNKNOWN = "UNKNOWN"
 
 
 class EligibilityStatus(str, Enum):
@@ -55,29 +101,42 @@ class ActionStatus(str, Enum):
     DONE = "DONE"
 
 
+# =========================================================
+# Frontend -> Backend Request
+# =========================================================
+
+
 class UserRequest(BaseModel):
+    """Frontend에서 전달하는 P0 User 입력 10개."""
+
     age: int = Field(ge=0)
+
     employment_status: EmploymentStatus
-    current_region: str = Field(min_length=1)
+    current_region: Region
 
     personal_monthly_income: int = Field(ge=0)
+
     total_assets: int = Field(ge=0)
     monthly_savings: int = Field(ge=0)
 
     housing_status: HousingStatus
 
     youth_household_monthly_income: int = Field(ge=0)
-    youth_household_size: int = Field(gt=0)
+    youth_household_size: int = Field(ge=1)
 
     marital_status: MaritalStatus
 
 
 class TargetRequest(BaseModel):
+    """Frontend에서 전달하는 P0 Target 입력 5개."""
+
     planned_move_in_date: date
+
     desired_deposit: int = Field(ge=0)
     desired_monthly_rent: int = Field(ge=0)
+
     desired_housing_type: HousingType
-    desired_region: str = Field(min_length=1)
+    desired_region: Region
 
 
 class PlanRequest(BaseModel):
@@ -85,20 +144,80 @@ class PlanRequest(BaseModel):
     target: TargetRequest
 
 
+# =========================================================
+# Re-planning Request
+# =========================================================
+
+
 class ReplanChanges(BaseModel):
-    desired_deposit: Optional[int] = Field(default=None, ge=0)
+    """
+    P0 15개 중 변경된 값만 전달한다.
+
+    모든 필드를 optional로 두고,
+    실제로 변경할 값만 JSON에 포함한다.
+    """
+
+    # User
+    age: int | None = Field(default=None, ge=0)
+
+    employment_status: EmploymentStatus | None = None
+    current_region: Region | None = None
+
+    personal_monthly_income: int | None = Field(default=None, ge=0)
+
+    total_assets: int | None = Field(default=None, ge=0)
+    monthly_savings: int | None = Field(default=None, ge=0)
+
+    housing_status: HousingStatus | None = None
+
+    youth_household_monthly_income: int | None = Field(
+        default=None,
+        ge=0,
+    )
+    youth_household_size: int | None = Field(
+        default=None,
+        ge=1,
+    )
+
+    marital_status: MaritalStatus | None = None
+
+    # Target
+    planned_move_in_date: date | None = None
+
+    desired_deposit: int | None = Field(default=None, ge=0)
+    desired_monthly_rent: int | None = Field(default=None, ge=0)
+
+    desired_housing_type: HousingType | None = None
+    desired_region: Region | None = None
 
 
 class ReplanRequest(BaseModel):
     user_id: int = Field(gt=0)
     target_id: int = Field(gt=0)
+
     previous_diagnosis_id: int = Field(gt=0)
     previous_plan_id: int = Field(gt=0)
+
     changes: ReplanChanges
 
 
+# =========================================================
+# User / Target Response
+# =========================================================
+
+
+class UserResponse(UserRequest):
+    user_id: int
+
+
 class TargetResponse(TargetRequest):
-    pass
+    target_id: int
+    user_id: int
+
+
+# =========================================================
+# Diagnosis
+# =========================================================
 
 
 class DiagnosisResponse(BaseModel):
@@ -112,47 +231,88 @@ class DiagnosisResponse(BaseModel):
 
     required_initial_fund: int
     initial_fund_gap: int
+
     required_monthly_saving: int
 
-    estimated_months: Optional[int]
+    # monthly_savings == 0이고 부족액이 남아 있으면
+    # 계산할 수 없으므로 null 가능
+    estimated_months: int | None
+
     calculated_at: datetime
 
 
+# =========================================================
+# Policy Match
+# =========================================================
+
+
 class PolicyMatchResponse(BaseModel):
-    match_id: int
-    user_id: int
-    diagnosis_id: int
+    # DB/내부 Mock에서는 존재할 수 있으므로 optional
+    match_id: int | None = None
+
+    user_id: int | None = None
+    diagnosis_id: int | None = None
+
     policy_id: int
+
     title: str
-    eligibility_status: EligibilityStatus
-    matched_conditions: list[str]
-    failed_conditions: list[str]
-    missing_conditions: list[str]
-    rank: Optional[int] = None
-    support_amount: Optional[int]
-    support_amount_text: str
-    eligibility_text: str
     description: str
-    application_start: Optional[date] = None
-    application_end: Optional[date] = None
-    application_period_type: str
-    region: str
-    provider: str
-    category: str
+
+    policy_category: PolicyCategory
+    policy_region: str
+    policy_provider: str | None = None
+
+    eligibility_status: EligibilityStatus
+
+    matched_conditions: list[str] = Field(default_factory=list)
+    failed_conditions: list[str] = Field(default_factory=list)
+    missing_conditions: list[str] = Field(default_factory=list)
+
+    rank: int | None = None
+
+    support_amount: int | None = None
+    support_amount_unit: SupportAmountUnit
+    support_amount_text: str
+
+    eligibility_text: str
+
+    application_start: date | None = None
+    application_end: date | None = None
+    application_period_type: ApplicationPeriodType
+
     source_url: str
-    checked_at: datetime
-    matched_at: datetime
+
+    checked_at: datetime | None = None
+    matched_at: datetime | None = None
+
+
+# =========================================================
+# AI -> Backend Action
+# =========================================================
 
 
 class AiAction(BaseModel):
     priority: int = Field(gt=0)
+
     action_type: ActionType
     timing: Timing
+
     title: str
     description: str
     reason: str
-    policy_id: Optional[int] = None
-    due_date: Optional[date] = None
+
+    policy_id: int | None = None
+    due_date: date | None = None
+
+
+class AiActionPlan(BaseModel):
+    summary: str
+    actions: list[AiAction]
+
+
+# =========================================================
+# Backend -> Frontend Action
+# =========================================================
 
 
 class ActionResponse(AiAction):
@@ -160,7 +320,9 @@ class ActionResponse(AiAction):
     plan_id: int
     user_id: int
     diagnosis_id: int
+
     status: ActionStatus
+
     created_at: datetime
 
 
@@ -169,36 +331,77 @@ class ActionPlanResponse(BaseModel):
     actions: list[ActionResponse]
 
 
-class PlanSnapshot(BaseModel):
+# =========================================================
+# Plan Response
+# =========================================================
+
+
+class PlanResponse(BaseModel):
     user_id: int
     target_id: int
     diagnosis_id: int
     plan_id: int
+
     target: TargetResponse
+
     diagnosis: DiagnosisResponse
     matched_policies: list[PolicyMatchResponse]
+
     action_plan: ActionPlanResponse
 
 
-class PlanResponse(PlanSnapshot):
-    pass
+# =========================================================
+# Re-planning Response
+# =========================================================
 
 
 class ChangedField(BaseModel):
-    before: int
-    after: int
+    """
+    Re-planning에서 before/after는 숫자뿐 아니라
+    날짜, Enum, 문자열도 될 수 있으므로 object처럼 받는다.
+    """
+
+    before: object
+    after: object
+
+
+class PlanSnapshot(BaseModel):
+    diagnosis_id: int
+    plan_id: int
+
+    target: TargetResponse
+
+    diagnosis: DiagnosisResponse
+
+    matched_policies: list[PolicyMatchResponse] = Field(
+        default_factory=list,
+    )
+
+    action_plan: ActionPlanResponse | None = None
 
 
 class ReplanResponse(BaseModel):
     user_id: int
     target_id: int
+
     previous: PlanSnapshot
     current: PlanSnapshot
+
     changed_fields: dict[str, ChangedField]
+
+
+# =========================================================
+# Health
+# =========================================================
 
 
 class HealthResponse(BaseModel):
     status: str
+
+
+# =========================================================
+# Error Response
+# =========================================================
 
 
 class ErrorDetail(BaseModel):
@@ -209,7 +412,8 @@ class ErrorDetail(BaseModel):
 class ErrorBody(BaseModel):
     code: str
     message: str
-    details: Optional[list[ErrorDetail]] = None
+
+    details: list[ErrorDetail] | None = None
 
 
 class ErrorResponse(BaseModel):
