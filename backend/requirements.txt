@@ -5,4 +5,6 @@ pydantic
 sqlalchemy
 python-dotenv
 httpx
+anthropic
+pytest
 # DB 배포시 psycopg[binary] 추가
