@@ -1,7 +1,55 @@
 import json
-from typing import Any
+from typing import Any, Optional
 
 from app.ai.schemas import ActionCandidate
+
+
+_USER_CONTEXT_FIELDS = (
+    "age",
+    "current_region",
+    "employment_status",
+    "marital_status",
+    "youth_household_monthly_income",
+    "youth_household_size",
+    "personal_monthly_income",
+    "total_assets",
+    "monthly_savings",
+    "housing_status",
+)
+_TARGET_CONTEXT_FIELDS = (
+    "planned_move_in_date",
+    "desired_region",
+    "desired_deposit",
+    "desired_monthly_rent",
+    "desired_housing_type",
+)
+_DIAGNOSIS_CONTEXT_FIELDS = (
+    "readiness_score",
+    "fund_score",
+    "saving_score",
+    "required_initial_fund",
+    "initial_fund_gap",
+    "required_monthly_saving",
+    "estimated_months",
+)
+_POLICY_CONTEXT_FIELDS = (
+    "policy_id",
+    "title",
+    "eligibility_status",
+    "matched_conditions",
+    "failed_conditions",
+    "missing_conditions",
+    "rank",
+    "support_amount",
+    "support_amount_text",
+    "eligibility_text",
+    "description",
+    "application_start",
+    "application_end",
+    "application_period_type",
+    "source_url",
+    "checked_at",
+)
 
 
 _SYSTEM_PROMPT = """당신은 대한민국 청년의 첫 독립 준비를 돕는 Action Plan 생성 전문가입니다.
@@ -52,6 +100,10 @@ def _format_candidates(candidates: list[ActionCandidate]) -> str:
     return "\n".join(lines)
 
 
+def _select_fields(data: dict[str, Any], fields: tuple[str, ...]) -> dict[str, Any]:
+    return {field: data[field] for field in fields if field in data}
+
+
 def build_plan_prompt(
     ai_input: dict[str, Any],
     candidates: list[ActionCandidate],
@@ -96,61 +148,15 @@ def build_ai_input(
     diagnosis: dict[str, Any],
     matched_policies: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    user_context_fields = (
-        "age",
-        "current_region",
-        "employment_status",
-        "marital_status",
-        "youth_household_monthly_income",
-        "youth_household_size",
-        "personal_monthly_income",
-        "total_assets",
-        "monthly_savings",
-        "housing_status",
-    )
-    target_context_fields = (
-        "planned_move_in_date",
-        "desired_region",
-        "desired_deposit",
-        "desired_monthly_rent",
-        "desired_housing_type",
-    )
-    diagnosis_context_fields = (
-        "readiness_score",
-        "fund_score",
-        "saving_score",
-        "required_initial_fund",
-        "initial_fund_gap",
-        "required_monthly_saving",
-        "estimated_months",
-    )
-    policy_context_fields = (
-        "policy_id",
-        "title",
-        "eligibility_status",
-        "matched_conditions",
-        "failed_conditions",
-        "missing_conditions",
-        "rank",
-        "support_amount",
-        "support_amount_text",
-        "eligibility_text",
-        "description",
-        "application_start",
-        "application_end",
-        "application_period_type",
-        "source_url",
-        "checked_at",
-    )
     return {
         "user_id": user["user_id"],
         "target_id": target["target_id"],
         "diagnosis_id": diagnosis["diagnosis_id"],
-        "user": {f: user[f] for f in user_context_fields if f in user},
-        "target": {f: target[f] for f in target_context_fields if f in target},
-        "diagnosis": {f: diagnosis[f] for f in diagnosis_context_fields if f in diagnosis},
+        "user": _select_fields(user, _USER_CONTEXT_FIELDS),
+        "target": _select_fields(target, _TARGET_CONTEXT_FIELDS),
+        "diagnosis": _select_fields(diagnosis, _DIAGNOSIS_CONTEXT_FIELDS),
         "matched_policies": [
-            {f: policy[f] for f in policy_context_fields if f in policy}
+            _select_fields(policy, _POLICY_CONTEXT_FIELDS)
             for policy in matched_policies
         ],
     }
@@ -163,28 +169,9 @@ def build_replan_ai_input(
     previous_actions: list[dict[str, Any]],
     current_diagnosis: dict[str, Any],
     current_policies: list[dict[str, Any]],
+    current_user: Optional[dict[str, Any]] = None,
+    current_target: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
-    diagnosis_context_fields = (
-        "readiness_score",
-        "fund_score",
-        "saving_score",
-        "required_initial_fund",
-        "initial_fund_gap",
-        "required_monthly_saving",
-        "estimated_months",
-    )
-    policy_context_fields = (
-        "policy_id",
-        "title",
-        "eligibility_status",
-        "matched_conditions",
-        "failed_conditions",
-        "missing_conditions",
-        "rank",
-        "support_amount",
-        "support_amount_text",
-        "application_period_type",
-    )
     action_context_fields = (
         "priority",
         "action_type",
@@ -197,10 +184,10 @@ def build_replan_ai_input(
     return {
         "changed_fields": changed_fields,
         "previous": {
-            "diagnosis": {f: previous_diagnosis[f] for f in diagnosis_context_fields if f in previous_diagnosis},
+            "diagnosis": _select_fields(previous_diagnosis, _DIAGNOSIS_CONTEXT_FIELDS),
             "matched_policies": [
-                {f: p[f] for f in policy_context_fields if f in p}
-                for p in previous_policies
+                _select_fields(policy, _POLICY_CONTEXT_FIELDS)
+                for policy in previous_policies
             ],
             "actions": [
                 {f: a[f] for f in action_context_fields if f in a}
@@ -208,10 +195,12 @@ def build_replan_ai_input(
             ],
         },
         "current": {
-            "diagnosis": {f: current_diagnosis[f] for f in diagnosis_context_fields if f in current_diagnosis},
+            "user": _select_fields(current_user or {}, _USER_CONTEXT_FIELDS),
+            "target": _select_fields(current_target or {}, _TARGET_CONTEXT_FIELDS),
+            "diagnosis": _select_fields(current_diagnosis, _DIAGNOSIS_CONTEXT_FIELDS),
             "matched_policies": [
-                {f: p[f] for f in policy_context_fields if f in p}
-                for p in current_policies
+                _select_fields(policy, _POLICY_CONTEXT_FIELDS)
+                for policy in current_policies
             ],
         },
     }

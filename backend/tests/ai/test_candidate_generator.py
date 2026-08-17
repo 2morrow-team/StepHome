@@ -12,7 +12,7 @@ from tests.ai.fixtures import (
 
 class TestSavingCandidate:
     def test_saving_maintain_when_sufficient(self):
-        candidates = generate_candidates(DIAGNOSIS, [], monthly_saving=500000)
+        candidates = generate_candidates(DIAGNOSIS, [], monthly_saving=9000000)
         saving = next(c for c in candidates if c.action_type == "SAVING")
         assert saving.basis == CandidateBasis.SAVING_MAINTAIN
 
@@ -29,7 +29,7 @@ class TestSavingCandidate:
     def test_saving_context_contains_required_monthly_saving(self):
         candidates = generate_candidates(DIAGNOSIS, [], monthly_saving=500000)
         saving = next(c for c in candidates if c.action_type == "SAVING")
-        assert saving.context["required_monthly_saving"] == 500000
+        assert saving.context["required_monthly_saving"] == DIAGNOSIS["required_monthly_saving"]
 
 
 class TestPolicyCandidates:

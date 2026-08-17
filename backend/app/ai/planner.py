@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any
+from typing import Any, Optional
 
 import anthropic
 
@@ -8,7 +8,7 @@ from app.ai.candidate_generator import generate_candidates
 from app.ai.prompts import build_plan_prompt, build_replan_prompt
 from app.ai.validator import validate_action_plan
 
-_client: anthropic.Anthropic | None = None
+_client: Optional[anthropic.Anthropic] = None
 
 
 def _get_client() -> anthropic.Anthropic:
@@ -37,8 +37,7 @@ def generate_action_plan(ai_input: dict[str, Any]) -> dict[str, Any]:
     )
     system_prompt, user_prompt = build_plan_prompt(ai_input, candidates)
     result = _call_llm(system_prompt, user_prompt)
-    valid_policy_ids = {p["policy_id"] for p in ai_input["matched_policies"]}
-    return validate_action_plan(result, valid_policy_ids=valid_policy_ids)
+    return validate_action_plan(result, candidates=candidates)
 
 
 def generate_replan_action_plan(replan_ai_input: dict[str, Any]) -> dict[str, Any]:
@@ -46,8 +45,8 @@ def generate_replan_action_plan(replan_ai_input: dict[str, Any]) -> dict[str, An
     candidates = generate_candidates(
         diagnosis=current["diagnosis"],
         matched_policies=current["matched_policies"],
+        monthly_saving=current.get("user", {}).get("monthly_savings"),
     )
     system_prompt, user_prompt = build_replan_prompt(replan_ai_input, candidates)
     result = _call_llm(system_prompt, user_prompt)
-    valid_policy_ids = {p["policy_id"] for p in current["matched_policies"]}
-    return validate_action_plan(result, valid_policy_ids=valid_policy_ids)
+    return validate_action_plan(result, candidates=candidates)
