@@ -103,14 +103,14 @@ class TestBuildAiInput:
     def _make_user(self):
         return {
             "user_id": 1,
-            "age": 24,
-            "current_region": "GYEONGGI",
+            "age": 25,
+            "current_region": "SEOUL",
             "employment_status": "EMPLOYED",
             "marital_status": "UNMARRIED",
-            "youth_household_monthly_income": 3000000,
+            "youth_household_monthly_income": 2500000,
             "youth_household_size": 1,
             "personal_monthly_income": 2500000,
-            "total_assets": 5000000,
+            "total_assets": 30000000,
             "monthly_savings": 500000,
             "housing_status": "NO_HOME",
             "some_internal_field": "should_be_excluded",
@@ -119,9 +119,9 @@ class TestBuildAiInput:
     def _make_target(self):
         return {
             "target_id": 1,
-            "planned_move_in_date": "2027-01-12",
+            "planned_move_in_date": "2027-03-01",
             "desired_region": "SEOUL",
-            "desired_deposit": 5000000,
+            "desired_deposit": 90000000,
             "desired_monthly_rent": 500000,
             "desired_housing_type": "MONTHLY_RENT",
         }
@@ -136,15 +136,22 @@ class TestBuildAiInput:
 
     def test_user_context_fields_present(self):
         result = build_ai_input(self._make_user(), self._make_target(), DIAGNOSIS, [])
-        for field in ("age", "employment_status", "marital_status", "youth_household_monthly_income",
-                      "youth_household_size", "personal_monthly_income", "total_assets",
-                      "monthly_savings", "housing_status"):
+        for field in ("age", "current_region", "employment_status", "marital_status",
+                      "youth_household_monthly_income", "youth_household_size",
+                      "personal_monthly_income", "total_assets", "monthly_savings",
+                      "housing_status"):
             assert field in result["user"]
 
-    def test_no_emergency_fund_fields(self):
+    def test_target_context_fields_present(self):
+        result = build_ai_input(self._make_user(), self._make_target(), DIAGNOSIS, [])
+        for field in ("planned_move_in_date", "desired_region", "desired_deposit",
+                      "desired_monthly_rent", "desired_housing_type"):
+            assert field in result["target"]
+
+    def test_no_emergency_fund_fields_in_diagnosis(self):
         result = build_ai_input(self._make_user(), self._make_target(), DIAGNOSIS, [])
         for field in ("emergency_score", "target_emergency_fund", "emergency_fund_gap"):
-            assert field not in result.get("diagnosis", {})
+            assert field not in result["diagnosis"]
 
     def test_policy_context_includes_application_period_type(self):
         result = build_ai_input(self._make_user(), self._make_target(), DIAGNOSIS, [POLICY_AVAILABLE])
@@ -184,3 +191,13 @@ class TestBuildReplanAiInput:
         policy = result["previous"]["matched_policies"][0]
         assert "policy_id" in policy
         assert "eligibility_status" in policy
+
+    def test_current_user_and_target_are_included(self):
+        user = TestBuildAiInput()._make_user()
+        target = TestBuildAiInput()._make_target()
+        result = build_replan_ai_input(
+            {}, DIAGNOSIS, [], [], DIAGNOSIS, [],
+            current_user=user, current_target=target,
+        )
+        assert result["current"]["user"]["monthly_savings"] == 500000
+        assert result["current"]["target"]["desired_deposit"] == 90000000

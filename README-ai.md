@@ -103,7 +103,7 @@ AI 출력에 포함되어야 하는 필드:
 AI 출력에 포함되어서는 안 되는 필드 (Backend 생성):
 
 ```text
-plan_id, action_id, status, created_at
+plan_id, action_id, user_id, diagnosis_id, status, created_at
 ```
 
 ---

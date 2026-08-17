@@ -1,7 +1,13 @@
 import copy
 import pytest
+from app.ai.candidate_generator import generate_candidates
 from app.ai.validator import validate_action_plan
-from tests.ai.fixtures import VALID_ACTION_PLAN
+from tests.ai.fixtures import (
+    DIAGNOSIS,
+    POLICY_AVAILABLE,
+    POLICY_NOT_ELIGIBLE,
+    VALID_ACTION_PLAN,
+)
 
 
 class TestValidStructure:
@@ -112,6 +118,12 @@ class TestPriorityValidation:
         plan["actions"][0]["priority"] = 1
         validate_action_plan(plan)  # should not raise
 
+    def test_duplicate_priority_raises(self):
+        plan = copy.deepcopy(VALID_ACTION_PLAN)
+        plan["actions"][1]["priority"] = 1
+        with pytest.raises(ValueError, match="순서대로"):
+            validate_action_plan(plan)
+
 
 class TestHallucinationPrevention:
     def test_unknown_policy_id_raises(self):
@@ -133,3 +145,22 @@ class TestHallucinationPrevention:
         plan = copy.deepcopy(VALID_ACTION_PLAN)
         plan["actions"][1]["policy_id"] = 999
         validate_action_plan(plan, valid_policy_ids=None)  # should not raise
+
+    def test_not_eligible_policy_candidate_is_rejected(self):
+        plan = copy.deepcopy(VALID_ACTION_PLAN)
+        plan["actions"][1]["policy_id"] = POLICY_NOT_ELIGIBLE["policy_id"]
+        candidates = generate_candidates(
+            DIAGNOSIS,
+            [POLICY_AVAILABLE, POLICY_NOT_ELIGIBLE],
+            monthly_saving=500000,
+        )
+        with pytest.raises(ValueError, match="허용되지 않은 Action 후보"):
+            validate_action_plan(plan, candidates=candidates)
+
+    def test_allowed_candidates_pass(self):
+        candidates = generate_candidates(
+            DIAGNOSIS,
+            [POLICY_AVAILABLE],
+            monthly_saving=500000,
+        )
+        validate_action_plan(copy.deepcopy(VALID_ACTION_PLAN), candidates=candidates)
