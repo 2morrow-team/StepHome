@@ -4,6 +4,6 @@
   "previous_diagnosis_id": 1,
   "previous_plan_id": 1,
   "changes": {
-    "deposit_budget": 4000000
+    "desired_deposit": 70000000
   }
 }
