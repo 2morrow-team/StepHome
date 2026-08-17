@@ -245,6 +245,17 @@ class DiagnosisResponse(BaseModel):
 # Policy Match
 # =========================================================
 
+class PolicyConditionDetail(BaseModel):
+    condition: str
+    result: str
+
+    current_value: object | None = None
+
+    required_min: int | float | None = None
+    required_max: int | float | None = None
+    required_values: list[str] | None = None
+
+    message: str
 
 class PolicyMatchResponse(BaseModel):
     # DB/내부 Mock에서는 존재할 수 있으므로 optional
@@ -267,6 +278,7 @@ class PolicyMatchResponse(BaseModel):
     matched_conditions: list[str] = Field(default_factory=list)
     failed_conditions: list[str] = Field(default_factory=list)
     missing_conditions: list[str] = Field(default_factory=list)
+    condition_details: list[PolicyConditionDetail] = Field(default_factory=list)
 
     rank: int | None = None
 

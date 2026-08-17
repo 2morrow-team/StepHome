@@ -29,8 +29,14 @@
       "marital_status": [],
       "employment_status": [],
       "income": {
-        "personal_ratio": null,
-        "youth_household_ratio": 0.6,
+        "personal_ratio": {
+          "min": null,
+          "max": null
+        },
+        "youth_household_ratio": {
+          "min": null,
+          "max": 0.6
+        },
         "basis": "MEDIAN_INCOME"
       },
       "assets": {
@@ -83,8 +89,14 @@
       ],
       "employment_status": [],
       "income": {
-        "personal_ratio": null,
-        "youth_household_ratio": null,
+        "personal_ratio": {
+          "min": null,
+          "max": null
+        },
+        "youth_household_ratio": {
+          "min": null,
+          "max": null
+        },
         "basis": null
       },
       "assets": {
@@ -136,8 +148,14 @@
       "marital_status": [],
       "employment_status": [],
       "income": {
-        "personal_ratio": null,
-        "youth_household_ratio": 0.6,
+        "personal_ratio": {
+          "min": null,
+          "max": null
+        },
+        "youth_household_ratio": {
+          "min": null,
+          "max": 0.6
+        },
         "basis": "MEDIAN_INCOME"
       },
       "assets": {
@@ -189,8 +207,14 @@
       "marital_status": [],
       "employment_status": [],
       "income": {
-        "personal_ratio": null,
-        "youth_household_ratio": null,
+        "personal_ratio": {
+          "min": null,
+          "max": null
+        },
+        "youth_household_ratio": {
+          "min": null,
+          "max": null
+        },
         "basis": null
       },
       "assets": {
@@ -244,8 +268,14 @@
       ],
       "employment_status": [],
       "income": {
-        "personal_ratio": null,
-        "youth_household_ratio": null,
+        "personal_ratio": {
+          "min": null,
+          "max": null
+        },
+        "youth_household_ratio": {
+          "min": null,
+          "max": null
+        },
         "basis": null
       },
       "assets": {
@@ -297,8 +327,14 @@
       "marital_status": [],
       "employment_status": [],
       "income": {
-        "personal_ratio": null,
-        "youth_household_ratio": 1.5,
+        "personal_ratio": {
+          "min": null,
+          "max": null
+        },
+        "youth_household_ratio": {
+          "min": 0.48,
+          "max": 1.5
+        },
         "basis": "MEDIAN_INCOME"
       },
       "assets": {
@@ -311,11 +347,7 @@
         "deposit_max": 80000000,
         "monthly_rent_max": 600000
       },
-      "additional_conditions": [
-        "INCOME_OVER_48_PERCENT_REQUIREMENT",
-        "REGISTERED_AT_RENTAL_ADDRESS",
-        "DUPLICATE_RENT_SUPPORT_RESTRICTION"
-      ]
+      "additional_conditions": []
     },
     "source_url": "https://housing.seoul.go.kr/site/main/content/sh01_060513",
     "checked_at": "2026-08-16T20:36:00"

@@ -136,12 +136,14 @@ def _policy_result(
     list[str],
     list[str],
     list[str],
+    list[dict[str, Any]],
 ]:
     rules = policy["eligibility_rules"]
 
     matched: list[str] = []
     failed: list[str] = []
     missing: list[str] = []
+    condition_details: list[dict[str, Any]] = []
 
     # -----------------------------------------------------
     # AGE
@@ -195,6 +197,19 @@ def _policy_result(
             matched.append("TARGET_REGION")
         else:
             failed.append("TARGET_REGION")
+
+            condition_details.append(
+                {
+                    "condition": "TARGET_REGION",
+                    "result": "FAILED",
+                    "current_value": target["desired_region"],
+                    "required_values": target_regions,
+                    "message": (
+                        f"희망 거주지역을 "
+                        f"{', '.join(target_regions)} 중 하나로 조정 필요"
+                    ),
+                }
+            )
 
     # -----------------------------------------------------
     # HOUSING_STATUS
@@ -254,6 +269,19 @@ def _policy_result(
         else:
             failed.append("HOUSING_TYPE")
 
+            condition_details.append(
+                {
+                    "condition": "HOUSING_TYPE",
+                    "result": "FAILED",
+                    "current_value": target["desired_housing_type"],
+                    "required_values": housing_types,
+                    "message": (
+                        f"희망 주거형태를 "
+                        f"{', '.join(housing_types)} 중 하나로 조정 필요"
+                    ),
+                }
+            )
+
     # DEPOSIT
 
     deposit_max = housing_rule["deposit_max"]
@@ -263,6 +291,18 @@ def _policy_result(
             matched.append("DEPOSIT_LIMIT")
         else:
             failed.append("DEPOSIT_LIMIT")
+
+            condition_details.append(
+                {
+                    "condition": "DEPOSIT_LIMIT",
+                    "result": "FAILED",
+                    "current_value": target["desired_deposit"],
+                    "required_max": deposit_max,
+                    "message": (
+                        f"희망 보증금 {deposit_max:,}원 이하 필요"
+                    ),
+                }
+            )
 
     # MONTHLY_RENT
 
@@ -277,6 +317,18 @@ def _policy_result(
         else:
             failed.append("MONTHLY_RENT_LIMIT")
 
+            condition_details.append(
+                {
+                    "condition": "MONTHLY_RENT_LIMIT",
+                    "result": "FAILED",
+                    "current_value": target["desired_monthly_rent"],
+                    "required_max": monthly_rent_max,
+                    "message": (
+                        f"희망 월세 {monthly_rent_max:,}원 이하 필요"
+                    ),
+                }
+            )
+
     # -----------------------------------------------------
     # INCOME
     # -----------------------------------------------------
@@ -284,58 +336,142 @@ def _policy_result(
     income_rule = rules["income"]
 
     personal_ratio = income_rule["personal_ratio"]
-    youth_household_ratio = (
-        income_rule["youth_household_ratio"]
-    )
+    youth_household_ratio = income_rule["youth_household_ratio"]
     income_basis = income_rule["basis"]
 
-    # 현재 자동판정 대상:
-    # MEDIAN_INCOME 기반 조건
     if income_basis == "MEDIAN_INCOME":
-
         median_income = _get_median_income(
             user["youth_household_size"]
         )
 
+        # -------------------------------------------------
         # 청년가구 소득
-        if youth_household_ratio is not None:
+        # -------------------------------------------------
 
-            income_limit = (
-                median_income
-                * youth_household_ratio
+        youth_min_ratio = youth_household_ratio["min"]
+        youth_max_ratio = youth_household_ratio["max"]
+
+        if youth_min_ratio is not None or youth_max_ratio is not None:
+            youth_income = user["youth_household_monthly_income"]
+
+            youth_min_income = (
+                median_income * youth_min_ratio
+                if youth_min_ratio is not None
+                else None
             )
 
+            youth_max_income = (
+                median_income * youth_max_ratio
+                if youth_max_ratio is not None
+                else None
+            )
+
+            # 최소 소득 기준 미충족
             if (
-                user["youth_household_monthly_income"]
-                <= income_limit
+                youth_min_income is not None
+                and youth_income <= youth_min_income
             ):
-                matched.append(
-                    "YOUTH_HOUSEHOLD_INCOME"
-                )
-            else:
-                failed.append(
-                    "YOUTH_HOUSEHOLD_INCOME"
+                failed.append("YOUTH_HOUSEHOLD_INCOME")
+
+                condition_details.append(
+                    {
+                        "condition": "YOUTH_HOUSEHOLD_INCOME",
+                        "result": "FAILED",
+                        "current_value": youth_income,
+                        "required_min": int(youth_min_income),
+                        "message": (
+                            f"청년가구 월 소득이 "
+                            f"{int(youth_min_income):,}원 초과 필요"
+                        ),
+                    }
                 )
 
+            # 최대 소득 기준 초과
+            elif (
+                youth_max_income is not None
+                and youth_income > youth_max_income
+            ):
+                failed.append("YOUTH_HOUSEHOLD_INCOME")
+
+                condition_details.append(
+                    {
+                        "condition": "YOUTH_HOUSEHOLD_INCOME",
+                        "result": "FAILED",
+                        "current_value": youth_income,
+                        "required_max": int(youth_max_income),
+                        "message": (
+                            f"청년가구 월 소득이 "
+                            f"{int(youth_max_income):,}원 이하 필요"
+                        ),
+                    }
+                )
+
+            else:
+                matched.append("YOUTH_HOUSEHOLD_INCOME")
+
+        # -------------------------------------------------
         # 본인 소득
-        if personal_ratio is not None:
+        # -------------------------------------------------
 
-            personal_income_limit = (
-                median_income
-                * personal_ratio
+        personal_min_ratio = personal_ratio["min"]
+        personal_max_ratio = personal_ratio["max"]
+
+        if personal_min_ratio is not None or personal_max_ratio is not None:
+            personal_income = user["personal_monthly_income"]
+
+            personal_min_income = (
+                median_income * personal_min_ratio
+                if personal_min_ratio is not None
+                else None
+            )
+
+            personal_max_income = (
+                median_income * personal_max_ratio
+                if personal_max_ratio is not None
+                else None
             )
 
             if (
-                user["personal_monthly_income"]
-                <= personal_income_limit
+                personal_min_income is not None
+                and personal_income <= personal_min_income
             ):
-                matched.append("PERSONAL_INCOME")
-            else:
                 failed.append("PERSONAL_INCOME")
 
-    # MEDIAN_INCOME 이외의 복잡한 소득 기준은
-    # eligibility_rules에서 자동판정하지 않고
-    # additional_conditions로 관리한다.
+                condition_details.append(
+                    {
+                        "condition": "PERSONAL_INCOME",
+                        "result": "FAILED",
+                        "current_value": personal_income,
+                        "required_min": int(personal_min_income),
+                        "message": (
+                            f"본인 월 소득이 "
+                            f"{int(personal_min_income):,}원 초과 필요"
+                        ),
+                    }
+                )
+
+            elif (
+                personal_max_income is not None
+                and personal_income > personal_max_income
+            ):
+                failed.append("PERSONAL_INCOME")
+
+                condition_details.append(
+                    {
+                        "condition": "PERSONAL_INCOME",
+                        "result": "FAILED",
+                        "current_value": personal_income,
+                        "required_max": int(personal_max_income),
+                        "message": (
+                            f"본인 월 소득이 "
+                            f"{int(personal_max_income):,}원 이하 필요"
+                        ),
+                    }
+                )
+
+            else:
+                matched.append("PERSONAL_INCOME")
+
 
     # -----------------------------------------------------
     # ASSETS
@@ -358,6 +494,15 @@ def _policy_result(
     # P0 15개 입력만으로 자동판정하지 않는 조건
     for condition in rules["additional_conditions"]:
         missing.append(condition)
+
+        condition_details.append(
+            {
+                "condition": condition,
+                "result": "MISSING",
+                "current_value": None,
+                "message": f"{condition} 추가 확인 필요",
+            }
+        )
 
     # -----------------------------------------------------
     # FINAL STATUS
@@ -396,7 +541,7 @@ def _policy_result(
     else:
         status = EligibilityStatus.AVAILABLE
 
-    return status, matched, failed, missing
+    return status, matched, failed, missing, condition_details
 
 
 # =========================================================
@@ -417,7 +562,7 @@ def match_policies(
 
     for offset, policy in enumerate(policies):
 
-        status, matched, failed, missing = _policy_result(
+        status, matched, failed, missing, condition_details = _policy_result(
             policy,
             user,
             target,
@@ -448,6 +593,7 @@ def match_policies(
                 "matched_conditions": matched,
                 "failed_conditions": failed,
                 "missing_conditions": missing,
+                "condition_details": condition_details,
 
                 "rank": offset + 1,
 
