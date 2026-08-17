@@ -322,8 +322,14 @@ support_amount_text
   "marital_status": [],
   "employment_status": [],
   "income": {
-    "personal_ratio": null,
-    "youth_household_ratio": null,
+    "personal_ratio": {
+      "min": null,
+      "max": null
+    },
+    "youth_household_ratio": {
+      "min": null,
+      "max": null
+    },
     "basis": null
   },
   "assets": {
@@ -343,6 +349,15 @@ support_amount_text
 ```text
 null
 = 해당 정책에 해당 단일 조건/수치 제한이 없음
+
+ratio.min = null
+= 소득 비율 하한 없음
+
+ratio.max = null
+= 소득 비율 상한 없음
+
+ratio는 항상 { min, max } 객체로 표현한다.
+예: { "min": 0.48, "max": 1.5 }
 
 []
 = 해당 배열 조건에 제한 없음

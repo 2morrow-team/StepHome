@@ -92,7 +92,7 @@
         "eligibility_text": "제주특별자치도에 주소를 둔 35~39세 청년으로, 부모와 별도 거주하는 무주택 청년 세대주. 기준 중위소득 60% 이하이며 재산 1억 2,200만원 이하",
         "application_start": null,
         "application_end": null,
-        "application_period_type": "UNKNOWN",
+        "application_period_type": "ALWAYS_OPEN",
         "source_url": "https://www.bokjiro.go.kr/ssis-tbu/twataa/wlfareInfo/moveTWAT52011M.do?wlfareInfoId=WLF00006076",
         "checked_at": "2026-08-15T21:58:00+09:00"
       },
@@ -115,7 +115,7 @@
         "eligibility_text": "만 19~34세, 부부합산 연소득 5천만원 이하, 순자산가액 3.37억원 이하인 무주택세대주 또는 예비세대주. 임차보증금 3억원 이하 주택 대상",
         "application_start": null,
         "application_end": null,
-        "application_period_type": "UNKNOWN",
+        "application_period_type": "ALWAYS_OPEN",
         "source_url": "https://housing.gg.go.kr/html/24204.do",
         "checked_at": "2026-08-15T22:40:00+09:00"
       },
@@ -138,9 +138,9 @@
         "eligibility_text": "공고일 현재 혼인 중이 아닌 무주택자로, 대학생·취업준비생 또는 만 19~39세 청년. 순위별 소득 및 자산기준 적용",
         "application_start": null,
         "application_end": null,
-        "application_period_type": "UNKNOWN",
+        "application_period_type": "NOTICE_BASED",
         "source_url": "https://apply.lh.or.kr/lhapply/cm/cntnts/cntntsView.do?cntntsId=201251&mi=1150",
-        "checked_at": "2026-08-16T00:00:00+09:00"
+        "checked_at": "2026-08-16T20:36:00+09:00"
       },
       {
         "match_id": 6,
@@ -162,8 +162,8 @@
         "application_start": "2026-05-06",
         "application_end": "2026-05-19",
         "application_period_type": "FIXED",
-        "source_url": "서울주거포털 청년월세지원",
-        "checked_at": "2026-08-16T00:00:00+09:00"
+        "source_url": "https://housing.seoul.go.kr/site/main/content/sh01_060513",
+        "checked_at": "2026-08-16T20:36:00+09:00"
       }
     ],
     "action_plan": {
@@ -327,7 +327,7 @@
         "eligibility_text": "제주특별자치도에 주소를 둔 35~39세 청년으로, 부모와 별도 거주하는 무주택 청년 세대주. 기준 중위소득 60% 이하이며 재산 1억 2,200만원 이하",
         "application_start": null,
         "application_end": null,
-        "application_period_type": "UNKNOWN",
+        "application_period_type": "ALWAYS_OPEN",
         "source_url": "https://www.bokjiro.go.kr/ssis-tbu/twataa/wlfareInfo/moveTWAT52011M.do?wlfareInfoId=WLF00006076",
         "checked_at": "2026-08-15T21:58:00+09:00"
       },
@@ -350,7 +350,7 @@
         "eligibility_text": "만 19~34세, 부부합산 연소득 5천만원 이하, 순자산가액 3.37억원 이하인 무주택세대주 또는 예비세대주. 임차보증금 3억원 이하 주택 대상",
         "application_start": null,
         "application_end": null,
-        "application_period_type": "UNKNOWN",
+        "application_period_type": "ALWAYS_OPEN",
         "source_url": "https://housing.gg.go.kr/html/24204.do",
         "checked_at": "2026-08-15T22:40:00+09:00"
       },
@@ -373,9 +373,9 @@
         "eligibility_text": "공고일 현재 혼인 중이 아닌 무주택자로, 대학생·취업준비생 또는 만 19~39세 청년. 순위별 소득 및 자산기준 적용",
         "application_start": null,
         "application_end": null,
-        "application_period_type": "UNKNOWN",
+        "application_period_type": "NOTICE_BASED",
         "source_url": "https://apply.lh.or.kr/lhapply/cm/cntnts/cntntsView.do?cntntsId=201251&mi=1150",
-        "checked_at": "2026-08-16T00:00:00+09:00"
+        "checked_at": "2026-08-16T20:36:00+09:00"
       },
       {
         "match_id": 12,
@@ -397,8 +397,8 @@
         "application_start": "2026-05-06",
         "application_end": "2026-05-19",
         "application_period_type": "FIXED",
-        "source_url": "서울주거포털 청년월세지원",
-        "checked_at": "2026-08-16T00:00:00+09:00"
+        "source_url": "https://housing.seoul.go.kr/site/main/content/sh01_060513",
+        "checked_at": "2026-08-16T20:36:00+09:00"
       }
     ],
     "action_plan": {
