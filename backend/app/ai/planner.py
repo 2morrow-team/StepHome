@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, Optional
 
@@ -62,6 +63,37 @@ def _call_llm(system_prompt: str, user_prompt: str) -> dict[str, Any]:
     return response.output_parsed.model_dump(mode="json")
 
 
+def _calc_phase_deadlines(move_in_date: date, today: Optional[date] = None) -> dict[int, str]:
+    today = today or date.today()
+    total_days = max((move_in_date - today).days, 0)
+    return {
+        1: str(today + timedelta(days=total_days // 4)),
+        2: str(today + timedelta(days=total_days // 2)),
+        3: str(today + timedelta(days=total_days * 3 // 4)),
+        4: str(move_in_date),
+    }
+
+
+def _extract_move_in_date(ai_input: dict[str, Any]) -> Optional[date]:
+    raw = ai_input.get("target", {}).get("planned_move_in_date")
+    if raw is None:
+        return None
+    if isinstance(raw, date):
+        return raw
+    try:
+        return date.fromisoformat(str(raw))
+    except ValueError:
+        return None
+
+
+def _inject_phase_due_dates(plan: dict[str, Any], phase_deadlines: dict[int, str]) -> dict[str, Any]:
+    for action in plan.get("actions", []):
+        phase = action.get("phase")
+        if isinstance(phase, int) and phase in phase_deadlines:
+            action["due_date"] = phase_deadlines[phase]
+    return plan
+
+
 def _fallback_enabled() -> bool:
     return os.getenv("AI_FALLBACK_ENABLED", "true").lower() not in {
         "0",
@@ -113,8 +145,13 @@ def generate_action_plan(ai_input: dict[str, Any]) -> dict[str, Any]:
         matched_policies=ai_input["matched_policies"],
         monthly_saving=ai_input.get("user", {}).get("monthly_savings"),
     )
-    system_prompt, user_prompt = build_plan_prompt(ai_input, candidates)
-    return _generate_and_validate(system_prompt, user_prompt, candidates)
+    move_in_date = _extract_move_in_date(ai_input)
+    phase_deadlines = _calc_phase_deadlines(move_in_date) if move_in_date else None
+    system_prompt, user_prompt = build_plan_prompt(ai_input, candidates, phase_deadlines)
+    plan = _generate_and_validate(system_prompt, user_prompt, candidates)
+    if phase_deadlines:
+        plan = _inject_phase_due_dates(plan, phase_deadlines)
+    return plan
 
 
 def generate_replan_action_plan(replan_ai_input: dict[str, Any]) -> dict[str, Any]:
@@ -124,10 +161,15 @@ def generate_replan_action_plan(replan_ai_input: dict[str, Any]) -> dict[str, An
         matched_policies=current["matched_policies"],
         monthly_saving=current.get("user", {}).get("monthly_savings"),
     )
-    system_prompt, user_prompt = build_replan_prompt(replan_ai_input, candidates)
-    return _generate_and_validate(
+    move_in_date = _extract_move_in_date({"target": current.get("target", {})})
+    phase_deadlines = _calc_phase_deadlines(move_in_date) if move_in_date else None
+    system_prompt, user_prompt = build_replan_prompt(replan_ai_input, candidates, phase_deadlines)
+    plan = _generate_and_validate(
         system_prompt,
         user_prompt,
         candidates,
         replan_input=replan_ai_input,
     )
+    if phase_deadlines:
+        plan = _inject_phase_due_dates(plan, phase_deadlines)
+    return plan

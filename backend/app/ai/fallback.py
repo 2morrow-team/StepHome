@@ -40,10 +40,22 @@ def _first_condition_message(candidate: ActionCandidate) -> str:
     return ", ".join(str(condition) for condition in conditions)
 
 
+_BASIS_PHASE: dict[str, int] = {
+    CandidateBasis.SAVING_MAINTAIN: 1,
+    CandidateBasis.SAVING_ADJUST: 1,
+    CandidateBasis.POLICY_APPLY: 1,
+    CandidateBasis.POLICY_MONITOR: 3,
+    CandidateBasis.CONDITION_ADJUST: 2,
+    CandidateBasis.INFORMATION_NOTICE: 2,
+    CandidateBasis.CONTRACT_CHECK: 4,
+}
+
+
 def _candidate_action(candidate: ActionCandidate, priority: int) -> dict[str, Any]:
     context = candidate.context
     policy_title = context.get("title") or "해당 정책"
     common = {
+        "phase": _BASIS_PHASE.get(candidate.basis, 1),
         "priority": priority,
         "action_type": candidate.action_type,
         "policy_id": candidate.policy_id,
@@ -135,6 +147,9 @@ def _replan_summary(replan_input: dict[str, Any]) -> str:
             f"{label}을(를) {_won(values.get('before'))}에서 {_won(values.get('after'))}(으)로 변경"
         )
 
+    def _status_str(v: Any) -> str:
+        return v.value if hasattr(v, "value") else str(v)
+
     previous_policies = {
         policy.get("policy_id"): policy.get("eligibility_status")
         for policy in replan_input.get("previous", {}).get("matched_policies", [])
@@ -144,8 +159,8 @@ def _replan_summary(replan_input: dict[str, Any]) -> str:
         policy_id = policy.get("policy_id")
         before = previous_policies.get(policy_id)
         after = policy.get("eligibility_status")
-        if before and before != after:
-            transitions.append(f"{policy.get('title', '정책')} {before}→{after}")
+        if before and _status_str(before) != _status_str(after):
+            transitions.append(f"{policy.get('title', '정책')} {_status_str(before)}→{_status_str(after)}")
 
     summary = "; ".join(change_texts) or "변경된 조건"
     if transitions:

@@ -326,10 +326,18 @@ class ScenarioService:
             diagnosis_view,
             policy_changes,
         )
+        changed_fields = {
+            field: {
+                "before": user[field] if field in user else target.get(field),
+                "after": value,
+            }
+            for field, value in changes.items()
+        }
         return {
             "scenario_id": scenario_id,
             "title": _SCENARIO_TITLES[scenario_id],
             "changes": changes,
+            "changed_fields": changed_fields,
             "diagnosis": diagnosis_view,
             "policy_changes": policy_changes,
             "recommendation_score": score,

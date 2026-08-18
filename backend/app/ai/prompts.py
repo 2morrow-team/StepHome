@@ -67,11 +67,12 @@ _OUTPUT_FORMAT = """\
   "summary": "사용자 상황 전체를 1~2문장으로 요약",
   "actions": [
     {
+      "phase": 1,
       "priority": 1,
       "action_type": "SAVING",
       "timing": "NOW",
       "title": "행동 제목 (15자 이내)",
-      "description": "구체적인 행동 방법",
+      "description": "서류명·기관명·사이트·금액을 명시한 구체적 행동 지침",
       "reason": "추천 이유",
       "policy_id": null,
       "due_date": null
@@ -82,20 +83,34 @@ _OUTPUT_FORMAT = """\
 _ACTION_RULES = """\
 Action 생성 규칙:
 - Diagnosis 재계산이나 Policy 자격 재판정 금지
+- 모든 Action에 phase(1~4)를 배정:
+  - Phase 1 (즉시): 지금 바로 시작해야 하는 것 (정책 신청 마감 임박, 저축 조정)
+  - Phase 2 (단기): 수개월 내 준비해야 하는 것 (서류 수집, 조건 확인)
+  - Phase 3 (중기): 입주 수개월 전 준비 (주거 탐색, 정책 모니터링)
+  - Phase 4 (입주 직전): 계약·이사·보증보험 등 입주 직전 처리
+- description은 반드시 구체적으로 작성:
+  예) "주민등록등본·건강보험료납부확인서를 정부24(gov.kr)에서 발급하세요." (O)
+      "서류를 준비하세요." (X)
 - eligibility_status별 처리:
   - AVAILABLE: 정책 신청/활용 Action 생성
   - CONDITIONAL: 사용자가 변경 가능한 미충족 조건 해결 Action 생성
-    - missing_conditions도 있으면 추가 확인이 필요하다고 함께 안내하고, 조건 변경만으로 신청 가능하다고 단정하지 않음
+    - missing_conditions도 있으면 추가 확인이 필요하다고 함께 안내
   - NEED_MORE_INFO: 부족 정보 확인 안내 Action 생성, 신청 추천하지 않음
   - NOT_ELIGIBLE: 해당 정책 관련 Action 생성하지 않음
-- POLICY_MONITOR 후보는 신청기간이 이미 끝난 정책이므로 현재 신청을 권하지 않고 다음 모집공고 확인을 안내
+- POLICY_MONITOR 후보는 다음 모집공고 확인 안내 (신청 권하지 않음)
 - 허용된 action_type: SAVING, POLICY, HOUSING, CONTRACT
 - 허용된 timing: NOW, PREPARE, SEARCH_HOUSE, BEFORE_CONTRACT
-- is_application_closed가 true인 정책의 due_date는 null
-- 신청기간이 종료되지 않았고 application_period_type이 FIXED인 정책의 due_date는 application_end와 동일
-- application_period_type이 FIXED가 아닌 정책의 due_date는 null
+- due_date는 반드시 null로 설정 (시스템이 phase 기준으로 자동 주입)
 - 제시된 모든 Action 후보를 각각 정확히 1개 Action으로 생성
 - priority는 1부터 순서대로"""
+
+
+def _format_phase_schedule(phase_deadlines: dict[int, str]) -> str:
+    labels = {1: "즉시 실행", 2: "단기 준비", 3: "중기 준비", 4: "입주 직전"}
+    return "\n".join(
+        f"  Phase {p} ({labels[p]}): ~{phase_deadlines[p]}"
+        for p in sorted(phase_deadlines)
+    )
 
 
 def _format_candidates(candidates: list[ActionCandidate]) -> str:
@@ -117,11 +132,16 @@ def _select_fields(data: dict[str, Any], fields: tuple[str, ...]) -> dict[str, A
 def build_plan_prompt(
     ai_input: dict[str, Any],
     candidates: list[ActionCandidate],
+    phase_deadlines: Optional[dict[int, str]] = None,
 ) -> tuple[str, str]:
+    phase_section = (
+        f"\n단계별 마감일 (독립 예정일 기준 4분할):\n{_format_phase_schedule(phase_deadlines)}\n"
+        if phase_deadlines else ""
+    )
     user = f"""다음은 독립을 준비 중인 청년의 현재 상황입니다.
 
 {json.dumps(ai_input, ensure_ascii=False, indent=2, default=str)}
-
+{phase_section}
 생성 예상 Action 후보:
 {_format_candidates(candidates)}
 
@@ -134,11 +154,16 @@ def build_plan_prompt(
 def build_replan_prompt(
     replan_ai_input: dict[str, Any],
     candidates: list[ActionCandidate],
+    phase_deadlines: Optional[dict[int, str]] = None,
 ) -> tuple[str, str]:
+    phase_section = (
+        f"\n단계별 마감일 (독립 예정일 기준 4분할):\n{_format_phase_schedule(phase_deadlines)}\n"
+        if phase_deadlines else ""
+    )
     user = f"""다음은 독립 조건을 변경한 사용자의 재계획 정보입니다.
 
 {json.dumps(replan_ai_input, ensure_ascii=False, indent=2, default=str)}
-
+{phase_section}
 현재 조건 기준 생성 예상 Action 후보:
 {_format_candidates(candidates)}
 
