@@ -13,7 +13,7 @@ export interface MetricCardProps extends HTMLAttributes<HTMLElement> {
 export function MetricCard({ label, value, supportingText, className, ...props }: MetricCardProps) {
   return (
     <article
-      className={joinClasses('flex min-h-[120px] w-full max-w-[280px] flex-col gap-2 rounded-card bg-background-surface p-5 shadow-card', className)}
+      className={joinClasses('flex min-h-[120px] w-full flex-col gap-2 rounded-card bg-background-surface p-5 shadow-card', className)}
       {...props}
     >
       <p className="type-caption text-text-secondary">{label}</p>

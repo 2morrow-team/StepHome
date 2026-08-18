@@ -23,8 +23,10 @@
 
   --text-primary: #102a43;
   --text-secondary: #667085;
+  --text-inverse: #ffffff;
 
   --border-default: #e5e7eb;
+  --border-subtle: #eef0f2;
   --border-interactive: #7a8495;
   --border-focus: #1f4b6e;
 
@@ -94,8 +96,10 @@
 
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
+  --color-text-inverse: var(--text-inverse);
 
   --color-border-default: var(--border-default);
+  --color-border-subtle: var(--border-subtle);
   --color-border-interactive: var(--border-interactive);
   --color-border-focus: var(--border-focus);
 
