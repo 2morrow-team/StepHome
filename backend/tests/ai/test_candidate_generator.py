@@ -1,3 +1,5 @@
+import copy
+
 import pytest
 from app.ai.candidate_generator import generate_candidates
 from app.ai.schemas import CandidateBasis
@@ -42,6 +44,69 @@ class TestPolicyCandidates:
         candidates = generate_candidates(DIAGNOSIS, [POLICY_CONDITIONAL])
         housing_candidates = [c for c in candidates if c.action_type == "HOUSING"]
         assert any(c.basis == CandidateBasis.CONDITION_ADJUST for c in housing_candidates)
+
+    def test_non_housing_conditional_policy_generates_policy_action(self):
+        policy = copy.deepcopy(POLICY_CONDITIONAL)
+        policy["failed_conditions"] = ["INCOME"]
+        policy["condition_details"] = [
+            {
+                "condition": "INCOME",
+                "result": "FAILED",
+                "current_value": 5000000,
+                "required_max": 3000000,
+                "message": "소득 기준을 초과합니다.",
+            }
+        ]
+
+        candidates = generate_candidates(DIAGNOSIS, [policy])
+        candidate = next(c for c in candidates if c.policy_id == policy["policy_id"])
+
+        assert candidate.action_type == "POLICY"
+        assert candidate.basis == CandidateBasis.CONDITION_ADJUST
+
+    def test_condition_details_are_kept_in_candidate_context(self):
+        candidates = generate_candidates(DIAGNOSIS, [POLICY_CONDITIONAL])
+        candidate = next(c for c in candidates if c.policy_id == POLICY_CONDITIONAL["policy_id"])
+
+        assert candidate.context["condition_details"] == POLICY_CONDITIONAL["condition_details"]
+
+    def test_conditional_candidate_keeps_missing_conditions(self):
+        policy = copy.deepcopy(POLICY_CONDITIONAL)
+        policy["missing_conditions"] = ["ASSET_REQUIREMENT"]
+
+        candidates = generate_candidates(DIAGNOSIS, [policy])
+        candidate = next(c for c in candidates if c.policy_id == policy["policy_id"])
+
+        assert candidate.context["missing_conditions"] == ["ASSET_REQUIREMENT"]
+
+    @pytest.mark.parametrize(
+        "policy_fixture",
+        [POLICY_AVAILABLE, POLICY_CONDITIONAL, POLICY_NEED_MORE_INFO],
+    )
+    def test_policy_candidate_keeps_application_period(self, policy_fixture):
+        candidates = generate_candidates(DIAGNOSIS, [policy_fixture])
+        candidate = next(c for c in candidates if c.policy_id == policy_fixture["policy_id"])
+
+        assert candidate.context["application_period_type"] == policy_fixture["application_period_type"]
+        assert candidate.context["application_end"] == policy_fixture["application_end"]
+
+    def test_target_region_condition_generates_housing_action(self):
+        policy = copy.deepcopy(POLICY_CONDITIONAL)
+        policy["failed_conditions"] = ["TARGET_REGION"]
+
+        candidates = generate_candidates(DIAGNOSIS, [policy])
+        candidate = next(c for c in candidates if c.policy_id == policy["policy_id"])
+
+        assert candidate.action_type == "HOUSING"
+
+    def test_current_region_condition_does_not_generate_housing_action(self):
+        policy = copy.deepcopy(POLICY_CONDITIONAL)
+        policy["failed_conditions"] = ["CURRENT_REGION"]
+
+        candidates = generate_candidates(DIAGNOSIS, [policy])
+        candidate = next(c for c in candidates if c.policy_id == policy["policy_id"])
+
+        assert candidate.action_type == "POLICY"
 
     def test_need_more_info_generates_information_notice(self):
         candidates = generate_candidates(DIAGNOSIS, [POLICY_NEED_MORE_INFO])

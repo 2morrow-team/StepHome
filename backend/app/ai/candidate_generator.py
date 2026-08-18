@@ -4,6 +4,36 @@ from app.ai.schemas import ActionCandidate, CandidateBasis
 from app.schemas.schemas import EligibilityStatus
 
 
+_HOUSING_CONDITIONS = {
+    "DEPOSIT_LIMIT",
+    "HOUSING_TYPE",
+    "MONTHLY_RENT_LIMIT",
+    # 현재 Rule Engine의 축약 조건명과 최종 Contract 조건명을 함께 지원한다.
+    "REGION",
+    "TARGET_REGION",
+    "DESIRED_REGION",
+    "DESIRED_DEPOSIT",
+    "DESIRED_MONTHLY_RENT",
+    "DESIRED_HOUSING_TYPE",
+}
+
+
+def _conditional_action_type(policy: dict[str, Any]) -> str:
+    """사용자가 바꿀 조건의 성격에 따라 조건부 Action 유형을 정한다."""
+    failed_conditions = set(policy.get("failed_conditions", []))
+    if failed_conditions & _HOUSING_CONDITIONS:
+        return "HOUSING"
+    return "POLICY"
+
+
+def _policy_schedule_context(policy: dict[str, Any]) -> dict[str, Any]:
+    """모든 정책 후보에 동일한 신청기간 정보를 전달한다."""
+    return {
+        "application_end": policy.get("application_end"),
+        "application_period_type": policy.get("application_period_type"),
+    }
+
+
 def generate_candidates(
     diagnosis: dict[str, Any],
     matched_policies: list[dict[str, Any]],
@@ -52,19 +82,22 @@ def generate_candidates(
                 policy_id=policy.get("policy_id"),
                 context={
                     "title": policy.get("title"),
-                    "application_end": policy.get("application_end"),
-                    "application_period_type": policy.get("application_period_type"),
                     "support_amount_text": policy.get("support_amount_text"),
+                    "condition_details": policy.get("condition_details", []),
+                    **_policy_schedule_context(policy),
                 },
             ))
         elif status == EligibilityStatus.CONDITIONAL.value:
             candidates.append(ActionCandidate(
-                action_type="HOUSING",
+                action_type=_conditional_action_type(policy),
                 basis=CandidateBasis.CONDITION_ADJUST,
                 policy_id=policy.get("policy_id"),
                 context={
                     "title": policy.get("title"),
                     "failed_conditions": policy.get("failed_conditions", []),
+                    "missing_conditions": policy.get("missing_conditions", []),
+                    "condition_details": policy.get("condition_details", []),
+                    **_policy_schedule_context(policy),
                 },
             ))
         elif status == EligibilityStatus.NEED_MORE_INFO.value:
@@ -75,6 +108,8 @@ def generate_candidates(
                 context={
                     "title": policy.get("title"),
                     "missing_conditions": policy.get("missing_conditions", []),
+                    "condition_details": policy.get("condition_details", []),
+                    **_policy_schedule_context(policy),
                 },
             ))
         # NOT_ELIGIBLE: candidate 생성하지 않음

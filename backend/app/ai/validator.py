@@ -77,7 +77,12 @@ def validate_action_plan(
 
             candidate = candidate_by_key[candidate_key]
             period_type = candidate.context.get("application_period_type")
-            if period_type != "FIXED" and action.get("due_date") is not None:
+            due_date = action.get("due_date")
+            if period_type == "FIXED":
+                application_end = candidate.context.get("application_end")
+                if application_end is None or str(due_date) != str(application_end):
+                    raise ValueError("FIXED 정책의 due_date는 application_end와 동일해야 합니다.")
+            elif due_date is not None:
                 raise ValueError("FIXED 신청기간이 아닌 정책의 due_date는 null이어야 합니다.")
 
     priorities = [action["priority"] for action in actions]

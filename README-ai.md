@@ -16,7 +16,7 @@
 
 ```text
 backend/app/ai/
-├── schemas.py            # ActionCandidate, CandidateBasis 타입 정의
+├── schemas.py            # Candidate 타입 + LLM 구조화 출력 Pydantic 스키마
 ├── candidate_generator.py # Diagnosis + PolicyMatch → Action 후보 결정
 ├── prompts.py            # Prompt 빌더 및 AI Input 조립
 ├── validator.py          # AI 출력 검증 및 Hallucination 방지
@@ -42,10 +42,12 @@ Prompt Builder (prompts.py)
         │
         ▼
 _call_llm() — LLM API 호출 격리 지점
+  Pydantic 스키마 기반 Structured Outputs 사용
   모델 교체 시 이 함수만 수정
         │
         ▼
 Validator
+  - Structured Outputs 이후 도메인 규칙을 추가 검증
   - 구조 검증 (summary, actions)
   - Backend 생성 필드 거부 (plan_id, action_id, status, created_at)
   - action_type / timing Enum 검증
@@ -64,7 +66,7 @@ ActionPlan (AI 출력 확정)
 | eligibility_status | 생성되는 Action 후보 |
 |---|---|
 | `AVAILABLE` | `POLICY` (POLICY_APPLY) |
-| `CONDITIONAL` | `HOUSING` (CONDITION_ADJUST) |
+| `CONDITIONAL` | 주거 조건은 `HOUSING`, 그 외 조건은 `POLICY` (CONDITION_ADJUST) |
 | `NEED_MORE_INFO` | `POLICY` (INFORMATION_NOTICE) |
 | `NOT_ELIGIBLE` | 후보 없음 |
 
@@ -75,6 +77,9 @@ ActionPlan (AI 출력 확정)
 - `monthly_saving` 미입력 → `SAVING_MAINTAIN` (기본값)
 
 `CONTRACT` 후보는 항상 마지막에 추가됩니다.
+
+Policy Context에는 `condition_details`와 정책 분류·지역·제공기관·지원금 단위를 포함해,
+AI가 판정 근거를 바꾸지 않고 구체적인 Action 설명에 활용하도록 합니다.
 
 ---
 
@@ -151,7 +156,10 @@ pytest tests/ai/ -v
 ## 환경 변수
 
 ```bash
-AI_API_KEY=<Anthropic API Key>
+OPENAI_API_KEY=<OpenAI Project API Key>
+OPENAI_MODEL=gpt-5.6-terra
+OPENAI_REASONING_EFFORT=low
 ```
 
+프로젝트 루트의 `.env`에 설정합니다. API Key는 Git에 커밋하지 않습니다.
 `.env.example` 참고.

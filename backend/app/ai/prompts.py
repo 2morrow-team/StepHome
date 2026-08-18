@@ -35,12 +35,17 @@ _DIAGNOSIS_CONTEXT_FIELDS = (
 _POLICY_CONTEXT_FIELDS = (
     "policy_id",
     "title",
+    "policy_category",
+    "policy_region",
+    "policy_provider",
     "eligibility_status",
     "matched_conditions",
     "failed_conditions",
     "missing_conditions",
+    "condition_details",
     "rank",
     "support_amount",
+    "support_amount_unit",
     "support_amount_text",
     "eligibility_text",
     "description",
@@ -80,10 +85,12 @@ Action 생성 규칙:
 - eligibility_status별 처리:
   - AVAILABLE: 정책 신청/활용 Action 생성
   - CONDITIONAL: 사용자가 변경 가능한 미충족 조건 해결 Action 생성
+    - missing_conditions도 있으면 추가 확인이 필요하다고 함께 안내하고, 조건 변경만으로 신청 가능하다고 단정하지 않음
   - NEED_MORE_INFO: 부족 정보 확인 안내 Action 생성, 신청 추천하지 않음
   - NOT_ELIGIBLE: 해당 정책 관련 Action 생성하지 않음
 - 허용된 action_type: SAVING, POLICY, HOUSING, CONTRACT
 - 허용된 timing: NOW, PREPARE, SEARCH_HOUSE, BEFORE_CONTRACT
+- application_period_type이 FIXED인 정책의 due_date는 application_end와 동일
 - application_period_type이 FIXED가 아닌 정책의 due_date는 null
 - priority는 1부터 순서대로"""
 
@@ -180,6 +187,7 @@ def build_replan_ai_input(
         "description",
         "reason",
         "policy_id",
+        "due_date",
     )
     return {
         "changed_fields": changed_fields,

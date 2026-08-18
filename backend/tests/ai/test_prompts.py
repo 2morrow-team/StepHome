@@ -47,6 +47,11 @@ class TestBuildPlanPrompt:
         _, user = build_plan_prompt(AI_INPUT, candidates)
         assert "action_type" in user
 
+    def test_conditional_with_missing_info_prevents_eligibility_overstatement(self):
+        candidates = _make_candidates()
+        _, user = build_plan_prompt(AI_INPUT, candidates)
+        assert "조건 변경만으로 신청 가능하다고 단정하지 않음" in user
+
     def test_user_prompt_contains_output_format(self):
         candidates = _make_candidates()
         _, user = build_plan_prompt(AI_INPUT, candidates)
@@ -157,6 +162,18 @@ class TestBuildAiInput:
         result = build_ai_input(self._make_user(), self._make_target(), DIAGNOSIS, [POLICY_AVAILABLE])
         assert "application_period_type" in result["matched_policies"][0]
 
+    def test_policy_context_includes_policy_metadata(self):
+        result = build_ai_input(self._make_user(), self._make_target(), DIAGNOSIS, [POLICY_AVAILABLE])
+        policy = result["matched_policies"][0]
+
+        for field in ("policy_category", "policy_region", "policy_provider", "support_amount_unit"):
+            assert policy[field] == POLICY_AVAILABLE[field]
+
+    def test_policy_context_includes_condition_details(self):
+        result = build_ai_input(self._make_user(), self._make_target(), DIAGNOSIS, [POLICY_CONDITIONAL])
+
+        assert result["matched_policies"][0]["condition_details"] == POLICY_CONDITIONAL["condition_details"]
+
     def test_matched_policies_list_length(self):
         result = build_ai_input(self._make_user(), self._make_target(), DIAGNOSIS, [POLICY_AVAILABLE, POLICY_CONDITIONAL])
         assert len(result["matched_policies"]) == 2
@@ -191,6 +208,7 @@ class TestBuildReplanAiInput:
         policy = result["previous"]["matched_policies"][0]
         assert "policy_id" in policy
         assert "eligibility_status" in policy
+        assert policy["condition_details"] == POLICY_AVAILABLE["condition_details"]
 
     def test_current_user_and_target_are_included(self):
         user = TestBuildAiInput()._make_user()
