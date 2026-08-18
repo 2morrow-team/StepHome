@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from app.routers.plan import router as plan_router
 from app.routers.replan import router as replan_router
 from app.routers.scenario import router as scenario_router
+from app.routers.rent_burden import router as rent_burden_router
 from app.ai.planner import AIPlannerError
 from app.schemas.schemas import HealthResponse
 
@@ -36,6 +37,7 @@ app.add_middleware(
 app.include_router(plan_router)
 app.include_router(replan_router)
 app.include_router(scenario_router)
+app.include_router(rent_burden_router)
 
 
 @app.exception_handler(AIPlannerError)
