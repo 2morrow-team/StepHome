@@ -2,6 +2,7 @@
 
 from datetime import date, datetime
 from enum import Enum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -109,7 +110,7 @@ class ActionStatus(str, Enum):
 class UserRequest(BaseModel):
     """Frontend에서 전달하는 P0 User 입력 10개."""
 
-    age: int = Field(ge=0)
+    age: int = Field(ge=19, le=39)
 
     employment_status: EmploymentStatus
     current_region: Region
@@ -158,15 +159,25 @@ class ReplanChanges(BaseModel):
     """
 
     # User
-    age: int | None = Field(default=None, ge=0)
+    age: int | None = Field(default=None, ge=19, le=39)
 
     employment_status: EmploymentStatus | None = None
     current_region: Region | None = None
 
-    personal_monthly_income: int | None = Field(default=None, ge=0)
+    personal_monthly_income: int | None = Field(
+        default=None,
+        ge=0,
+    )
 
-    total_assets: int | None = Field(default=None, ge=0)
-    monthly_savings: int | None = Field(default=None, ge=0)
+    total_assets: int | None = Field(
+        default=None,
+        ge=0,
+    )
+
+    monthly_savings: int | None = Field(
+        default=None,
+        ge=0,
+    )
 
     housing_status: HousingStatus | None = None
 
@@ -174,6 +185,7 @@ class ReplanChanges(BaseModel):
         default=None,
         ge=0,
     )
+
     youth_household_size: int | None = Field(
         default=None,
         ge=1,
@@ -184,8 +196,15 @@ class ReplanChanges(BaseModel):
     # Target
     planned_move_in_date: date | None = None
 
-    desired_deposit: int | None = Field(default=None, ge=0)
-    desired_monthly_rent: int | None = Field(default=None, ge=0)
+    desired_deposit: int | None = Field(
+        default=None,
+        ge=0,
+    )
+
+    desired_monthly_rent: int | None = Field(
+        default=None,
+        ge=0,
+    )
 
     desired_housing_type: HousingType | None = None
     desired_region: Region | None = None
@@ -235,7 +254,7 @@ class DiagnosisResponse(BaseModel):
     required_monthly_saving: int
 
     # monthly_savings == 0이고 부족액이 남아 있으면
-    # 계산할 수 없으므로 null 가능
+    # 유한한 예상 준비기간을 계산할 수 없으므로 null 가능
     estimated_months: int | None
 
     calculated_at: datetime
@@ -245,20 +264,23 @@ class DiagnosisResponse(BaseModel):
 # Policy Match
 # =========================================================
 
-class PolicyConditionDetail(BaseModel):
+
+class ConditionDetail(BaseModel):
+    """Rule Engine이 생성하는 정책 조건별 상세 판정 정보."""
+
     condition: str
     result: str
 
-    current_value: object | None = None
+    current_value: Any | None = None
 
+    required_values: list[str] | None = None
     required_min: int | float | None = None
     required_max: int | float | None = None
-    required_values: list[str] | None = None
 
     message: str
 
+
 class PolicyMatchResponse(BaseModel):
-    # DB/내부 Mock에서는 존재할 수 있으므로 optional
     match_id: int | None = None
 
     user_id: int | None = None
@@ -275,10 +297,21 @@ class PolicyMatchResponse(BaseModel):
 
     eligibility_status: EligibilityStatus
 
-    matched_conditions: list[str] = Field(default_factory=list)
-    failed_conditions: list[str] = Field(default_factory=list)
-    missing_conditions: list[str] = Field(default_factory=list)
-    condition_details: list[PolicyConditionDetail] = Field(default_factory=list)
+    matched_conditions: list[str] = Field(
+        default_factory=list,
+    )
+
+    failed_conditions: list[str] = Field(
+        default_factory=list,
+    )
+
+    missing_conditions: list[str] = Field(
+        default_factory=list,
+    )
+
+    condition_details: list[ConditionDetail] = Field(
+        default_factory=list,
+    )
 
     rank: int | None = None
 
@@ -299,7 +332,7 @@ class PolicyMatchResponse(BaseModel):
 
 
 # =========================================================
-# AI -> Backend Action
+# AI Action / ActionPlan
 # =========================================================
 
 
@@ -317,19 +350,10 @@ class AiAction(BaseModel):
     due_date: date | None = None
 
 
-class AiActionPlan(BaseModel):
-    summary: str
-    actions: list[AiAction]
-
-
-# =========================================================
-# Backend -> Frontend Action
-# =========================================================
-
-
 class ActionResponse(AiAction):
     action_id: int
     plan_id: int
+
     user_id: int
     diagnosis_id: int
 
@@ -348,7 +372,7 @@ class ActionPlanResponse(BaseModel):
 # =========================================================
 
 
-class PlanResponse(BaseModel):
+class PlanSnapshot(BaseModel):
     user_id: int
     target_id: int
     diagnosis_id: int
@@ -357,39 +381,29 @@ class PlanResponse(BaseModel):
     target: TargetResponse
 
     diagnosis: DiagnosisResponse
+
     matched_policies: list[PolicyMatchResponse]
 
     action_plan: ActionPlanResponse
 
 
+class PlanResponse(PlanSnapshot):
+    pass
+
+
 # =========================================================
-# Re-planning Response
+# Re-plan Response
 # =========================================================
 
 
 class ChangedField(BaseModel):
     """
-    Re-planning에서 before/after는 숫자뿐 아니라
-    날짜, Enum, 문자열도 될 수 있으므로 object처럼 받는다.
+    P0 전체 변경을 지원하므로
+    숫자뿐 아니라 Enum / 날짜도 들어갈 수 있다.
     """
 
-    before: object
-    after: object
-
-
-class PlanSnapshot(BaseModel):
-    diagnosis_id: int
-    plan_id: int
-
-    target: TargetResponse
-
-    diagnosis: DiagnosisResponse
-
-    matched_policies: list[PolicyMatchResponse] = Field(
-        default_factory=list,
-    )
-
-    action_plan: ActionPlanResponse | None = None
+    before: Any
+    after: Any
 
 
 class ReplanResponse(BaseModel):
@@ -412,7 +426,7 @@ class HealthResponse(BaseModel):
 
 
 # =========================================================
-# Error Response
+# Error
 # =========================================================
 
 
