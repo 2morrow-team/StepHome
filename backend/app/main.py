@@ -7,6 +7,8 @@ from fastapi.responses import JSONResponse
 
 from app.routers.plan import router as plan_router
 from app.routers.replan import router as replan_router
+from app.routers.scenario import router as scenario_router
+from app.ai.planner import AIPlannerError
 from app.schemas.schemas import HealthResponse
 
 
@@ -33,6 +35,25 @@ app.add_middleware(
 # Router 등록
 app.include_router(plan_router)
 app.include_router(replan_router)
+app.include_router(scenario_router)
+
+
+@app.exception_handler(AIPlannerError)
+async def ai_planner_error_handler(
+    _,
+    _exc: AIPlannerError,
+) -> JSONResponse:
+    """AI와 안전 fallback이 모두 실패한 경우 공통 오류 형식으로 응답한다."""
+
+    return JSONResponse(
+        status_code=503,
+        content={
+            "error": {
+                "code": "AI_TEMPORARILY_UNAVAILABLE",
+                "message": "맞춤 계획 생성이 지연되고 있습니다. 잠시 후 다시 시도해주세요.",
+            }
+        },
+    )
 
 
 @app.get(
@@ -133,4 +154,3 @@ async def lookup_error_handler(
             }
         },
     )
-    

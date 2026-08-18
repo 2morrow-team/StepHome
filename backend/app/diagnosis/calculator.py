@@ -1,5 +1,7 @@
 # 독립 준비도 Diagnosis 계산 모듈
 
+from __future__ import annotations
+
 import math
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
@@ -168,4 +170,3 @@ def calculate_diagnosis(
 
         "calculated_at": datetime.now(KST),
     }
-    
