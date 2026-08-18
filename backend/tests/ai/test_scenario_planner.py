@@ -43,6 +43,8 @@ def _ai_input() -> dict:
 
 def test_call_scenario_llm_uses_structured_output_schema(monkeypatch):
     captured = {}
+    monkeypatch.setenv("OPENAI_MODEL", "test-model")
+    monkeypatch.setenv("OPENAI_REASONING_EFFORT", "low")
 
     class FakeResponses:
         def parse(self, **kwargs):
@@ -73,7 +75,7 @@ def test_call_scenario_llm_uses_structured_output_schema(monkeypatch):
 
     result = scenario_planner._call_scenario_llm("system", "user")
 
-    assert captured["model"] == "gpt-5.6-terra"
+    assert captured["model"] == "test-model"
     assert captured["text_format"] is ScenarioRecommendationOutput
     assert captured["reasoning"] == {"effort": "low"}
     assert result["recommended_scenario_id"] == "DELAY_MOVE_IN"

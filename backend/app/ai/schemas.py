@@ -28,6 +28,7 @@ class ActionOutput(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    phase: int = Field(ge=1, le=4, description="실행 단계 1=즉시·2=단기·3=중기·4=입주직전")
     priority: int = Field(ge=1, description="1부터 시작하는 실행 우선순위")
     action_type: Literal["SAVING", "POLICY", "HOUSING", "CONTRACT"]
     timing: Literal["NOW", "PREPARE", "SEARCH_HOUSE", "BEFORE_CONTRACT"]

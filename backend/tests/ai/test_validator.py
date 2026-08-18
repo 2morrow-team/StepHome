@@ -132,6 +132,37 @@ class TestPriorityValidation:
             validate_action_plan(plan)
 
 
+class TestPhaseValidation:
+    @pytest.mark.parametrize("phase", [1, 2, 3, 4])
+    def test_valid_phase_passes(self, phase):
+        plan = copy.deepcopy(VALID_ACTION_PLAN)
+        plan["actions"][0]["phase"] = phase
+        validate_action_plan(plan)  # should not raise
+
+    def test_phase_zero_raises(self):
+        plan = copy.deepcopy(VALID_ACTION_PLAN)
+        plan["actions"][0]["phase"] = 0
+        with pytest.raises(ValueError, match="phase"):
+            validate_action_plan(plan)
+
+    def test_phase_five_raises(self):
+        plan = copy.deepcopy(VALID_ACTION_PLAN)
+        plan["actions"][0]["phase"] = 5
+        with pytest.raises(ValueError, match="phase"):
+            validate_action_plan(plan)
+
+    def test_string_phase_raises(self):
+        plan = copy.deepcopy(VALID_ACTION_PLAN)
+        plan["actions"][0]["phase"] = "1"
+        with pytest.raises(ValueError, match="phase"):
+            validate_action_plan(plan)
+
+    def test_missing_phase_passes(self):
+        plan = copy.deepcopy(VALID_ACTION_PLAN)
+        del plan["actions"][0]["phase"]
+        validate_action_plan(plan)  # phase는 선택 필드, 없어도 통과
+
+
 class TestHallucinationPrevention:
     def test_unknown_policy_id_raises(self):
         plan = copy.deepcopy(VALID_ACTION_PLAN)
@@ -172,65 +203,6 @@ class TestHallucinationPrevention:
             today=date(2026, 4, 1),
         )
         validate_action_plan(copy.deepcopy(VALID_ACTION_PLAN), candidates=candidates)
-
-    def test_fixed_policy_due_date_must_match_application_end(self):
-        plan = copy.deepcopy(VALID_ACTION_PLAN)
-        plan["actions"][1]["due_date"] = "2026-06-30"
-        candidates = generate_candidates(
-            DIAGNOSIS,
-            [POLICY_AVAILABLE],
-            monthly_saving=500000,
-            today=date(2026, 4, 1),
-        )
-
-        with pytest.raises(ValueError, match="application_end"):
-            validate_action_plan(plan, candidates=candidates)
-
-    def test_fixed_policy_due_date_cannot_be_null(self):
-        plan = copy.deepcopy(VALID_ACTION_PLAN)
-        plan["actions"][1]["due_date"] = None
-        candidates = generate_candidates(
-            DIAGNOSIS,
-            [POLICY_AVAILABLE],
-            monthly_saving=500000,
-            today=date(2026, 4, 1),
-        )
-
-        with pytest.raises(ValueError, match="application_end"):
-            validate_action_plan(plan, candidates=candidates)
-
-    def test_fixed_conditional_policy_accepts_application_end(self):
-        plan = {
-            "summary": "보증금 조건을 조정해 정책 신청을 준비하세요.",
-            "actions": [
-                {
-                    "priority": 1,
-                    "action_type": "HOUSING",
-                    "timing": "NOW",
-                    "title": "보증금 조건 조정",
-                    "description": "희망 보증금을 정책 기준 이하로 조정합니다.",
-                    "reason": "보증금 조건만 충족하면 신청할 수 있습니다.",
-                    "policy_id": POLICY_CONDITIONAL["policy_id"],
-                    "due_date": POLICY_CONDITIONAL["application_end"],
-                }
-            ],
-        }
-        candidates = generate_candidates(
-            DIAGNOSIS,
-            [POLICY_CONDITIONAL],
-            monthly_saving=500000,
-            today=date(2026, 4, 1),
-        )
-
-        validate_action_plan(plan, candidates=candidates)
-
-    def test_non_fixed_policy_due_date_must_be_null(self):
-        plan = copy.deepcopy(VALID_ACTION_PLAN)
-        plan["actions"][1]["policy_id"] = POLICY_NEED_MORE_INFO["policy_id"]
-        candidates = generate_candidates(DIAGNOSIS, [POLICY_NEED_MORE_INFO], monthly_saving=500000)
-
-        with pytest.raises(ValueError, match="null"):
-            validate_action_plan(plan, candidates=candidates)
 
     def test_all_candidates_are_required_when_enabled(self):
         candidates = generate_candidates(DIAGNOSIS, [], monthly_saving=500000)

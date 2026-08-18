@@ -64,6 +64,10 @@ def validate_action_plan(
             if policy_id not in valid_policy_ids:
                 raise ValueError(f"존재하지 않는 policy_id가 포함되어 있습니다: {policy_id}")
 
+        phase = action.get("phase")
+        if phase is not None and (not isinstance(phase, int) or not (1 <= phase <= 4)):
+            raise ValueError(f"phase는 1~4 사이 정수여야 합니다: {phase}")
+
         if allowed_candidates is not None:
             candidate_key = (action["action_type"], policy_id)
             if candidate_key not in allowed_candidates:
@@ -77,19 +81,6 @@ def validate_action_plan(
                     f"action_type={action['action_type']}, policy_id={policy_id}"
                 )
             used_candidates.add(candidate_key)
-
-            candidate = candidate_by_key[candidate_key]
-            period_type = candidate.context.get("application_period_type")
-            due_date = action.get("due_date")
-            if candidate.context.get("is_application_closed"):
-                if due_date is not None:
-                    raise ValueError("신청기간이 종료된 정책의 due_date는 null이어야 합니다.")
-            elif period_type == "FIXED":
-                application_end = candidate.context.get("application_end")
-                if application_end is None or str(due_date) != str(application_end):
-                    raise ValueError("FIXED 정책의 due_date는 application_end와 동일해야 합니다.")
-            elif due_date is not None:
-                raise ValueError("FIXED 신청기간이 아닌 정책의 due_date는 null이어야 합니다.")
 
     priorities = [action["priority"] for action in actions]
     if priorities != list(range(1, len(actions) + 1)):

@@ -371,6 +371,7 @@ class PolicyMatchResponse(BaseModel):
 
 
 class AiAction(BaseModel):
+    phase: int | None = Field(default=None, ge=1, le=4)
     priority: int = Field(gt=0)
 
     action_type: ActionType
@@ -476,6 +477,7 @@ class ScenarioOption(BaseModel):
     scenario_id: ScenarioId
     title: str
     changes: ReplanChanges
+    changed_fields: dict[str, ChangedField]
     diagnosis: ScenarioDiagnosis
     policy_changes: list[PolicyStatusChange]
     recommendation_score: int = Field(ge=0, le=100)

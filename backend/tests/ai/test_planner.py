@@ -54,6 +54,8 @@ def test_plan_uses_actual_monthly_saving_field(monkeypatch):
 
 def test_call_llm_uses_structured_output_schema(monkeypatch):
     captured = {}
+    monkeypatch.setenv("OPENAI_MODEL", "test-model")
+    monkeypatch.setenv("OPENAI_REASONING_EFFORT", "low")
 
     class FakeResponses:
         def parse(self, **kwargs):
@@ -64,6 +66,7 @@ def test_call_llm_uses_structured_output_schema(monkeypatch):
                         "summary": "현재 저축 계획을 유지하세요.",
                         "actions": [
                             {
+                                "phase": 1,
                                 "priority": 1,
                                 "action_type": "SAVING",
                                 "timing": "NOW",
@@ -83,7 +86,7 @@ def test_call_llm_uses_structured_output_schema(monkeypatch):
 
     result = planner._call_llm("system", "user")
 
-    assert captured["model"] == "gpt-5.6-terra"
+    assert captured["model"] == "test-model"
     assert captured["text_format"] is ActionPlanOutput
     assert captured["reasoning"] == {"effort": "low"}
     assert result["actions"][0]["due_date"] is None

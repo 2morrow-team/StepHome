@@ -201,6 +201,7 @@ export interface ScenarioOption {
   scenario_id: ScenarioId
   title: string
   changes: ReplanChanges
+  changed_fields: Record<string, { before: unknown; after: unknown }>
   diagnosis: ScenarioDiagnosis
   policy_changes: PolicyStatusChange[]
   recommendation_score: number

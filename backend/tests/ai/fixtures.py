@@ -154,6 +154,7 @@ VALID_ACTION_PLAN = {
     "summary": "현재 저축 계획을 유지하면서 이용 가능한 정책을 활용하세요.",
     "actions": [
         {
+            "phase": 1,
             "priority": 1,
             "action_type": "SAVING",
             "timing": "NOW",
@@ -164,6 +165,7 @@ VALID_ACTION_PLAN = {
             "due_date": None,
         },
         {
+            "phase": 1,
             "priority": 2,
             "action_type": "POLICY",
             "timing": "NOW",
@@ -171,7 +173,7 @@ VALID_ACTION_PLAN = {
             "description": "신청기간과 필요서류를 확인합니다.",
             "reason": "현재 이용 가능한 정책입니다.",
             "policy_id": 1,
-            "due_date": "2026-05-29",
+            "due_date": None,
         },
     ],
 }

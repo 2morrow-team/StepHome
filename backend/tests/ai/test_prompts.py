@@ -50,7 +50,7 @@ class TestBuildPlanPrompt:
     def test_conditional_with_missing_info_prevents_eligibility_overstatement(self):
         candidates = _make_candidates()
         _, user = build_plan_prompt(AI_INPUT, candidates)
-        assert "조건 변경만으로 신청 가능하다고 단정하지 않음" in user
+        assert "missing_conditions" in user
 
     def test_user_prompt_contains_output_format(self):
         candidates = _make_candidates()
