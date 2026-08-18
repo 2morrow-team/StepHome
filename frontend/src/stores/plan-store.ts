@@ -1,5 +1,7 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type {
+  Action,
   EmploymentStatus,
   HousingStatus,
   HousingType,
@@ -49,10 +51,52 @@ interface PlanStore {
   setDraft: (draft: Partial<PlanDraft>) => void
 }
 
+interface RoadmapProgressStore {
+  completedActionIdsByPlan: Record<string, number[]>
+  ensurePlanProgress: (planId: number, actions: Action[]) => void
+  setActionCompleted: (planId: number, actionId: number, completed: boolean) => void
+}
+
 export const usePlanStore = create<PlanStore>((set) => ({
   draft: initialDraft,
   setDraft: (draft) => set((state) => ({ draft: { ...state.draft, ...draft } })),
 }))
+
+export const useRoadmapProgressStore = create<RoadmapProgressStore>()(
+  persist(
+    (set) => ({
+      completedActionIdsByPlan: {},
+      ensurePlanProgress: (planId, actions) => set((state) => {
+        const key = String(planId)
+        if (state.completedActionIdsByPlan[key]) return state
+
+        return {
+          completedActionIdsByPlan: {
+            ...state.completedActionIdsByPlan,
+            [key]: actions.filter((action) => action.status === 'DONE').map((action) => action.action_id),
+          },
+        }
+      }),
+      setActionCompleted: (planId, actionId, completed) => set((state) => {
+        const key = String(planId)
+        const currentIds = state.completedActionIdsByPlan[key] ?? []
+        const nextIds = completed
+          ? Array.from(new Set([...currentIds, actionId]))
+          : currentIds.filter((id) => id !== actionId)
+
+        return {
+          completedActionIdsByPlan: {
+            ...state.completedActionIdsByPlan,
+            [key]: nextIds,
+          },
+        }
+      }),
+    }),
+    {
+      name: '2morrow-roadmap-progress',
+    },
+  ),
+)
 
 export function toPlanRequest(draft: PlanDraft): PlanRequest {
   return {

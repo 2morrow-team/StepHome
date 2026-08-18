@@ -1,11 +1,11 @@
 {
   "error": {
     "code": "INVALID_INPUT",
-    "message": "입력값을 확인해주세요.",
+    "message": "희망 보증금은 0 이상으로 입력해주세요.",
     "details": [
       {
-        "field": "target.desired_deposit",
-        "reason": "희망 보증금은 0원 이상이어야 합니다."
+        "field": "희망 보증금",
+        "reason": "희망 보증금은 0 이상으로 입력해주세요."
       }
     ]
   }

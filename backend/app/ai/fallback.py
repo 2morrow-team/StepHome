@@ -13,6 +13,13 @@ _FIELD_LABELS = {
     "total_assets": "총자산",
 }
 
+_STATUS_LABELS = {
+    "AVAILABLE": "신청 가능",
+    "CONDITIONAL": "조건 조정 필요",
+    "NEED_MORE_INFO": "추가 확인 필요",
+    "NOT_ELIGIBLE": "현재 대상 아님",
+}
+
 
 def _won(value: Any) -> str:
     if isinstance(value, (int, float)):
@@ -142,12 +149,16 @@ def _replan_summary(replan_input: dict[str, Any]) -> str:
     changes = replan_input.get("changed_fields", {})
     change_texts = []
     for field, values in changes.items():
-        label = _FIELD_LABELS.get(field, field)
+        label = _FIELD_LABELS.get(field, "변경 조건")
         change_texts.append(
-            f"{label}을(를) {_won(values.get('before'))}에서 {_won(values.get('after'))}(으)로 변경"
+            f"{label}: {_won(values.get('before'))}에서 {_won(values.get('after'))}(으)로 변경"
         )
 
     def _status_str(v: Any) -> str:
+        value = v.value if hasattr(v, "value") else str(v)
+        return _STATUS_LABELS.get(value, value)
+
+    def _status_key(v: Any) -> str:
         return v.value if hasattr(v, "value") else str(v)
 
     previous_policies = {
@@ -159,7 +170,7 @@ def _replan_summary(replan_input: dict[str, Any]) -> str:
         policy_id = policy.get("policy_id")
         before = previous_policies.get(policy_id)
         after = policy.get("eligibility_status")
-        if before and _status_str(before) != _status_str(after):
+        if before and _status_key(before) != _status_key(after):
             transitions.append(f"{policy.get('title', '정책')} {_status_str(before)}→{_status_str(after)}")
 
     summary = "; ".join(change_texts) or "변경된 조건"

@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 
 from app.ai import planner
 from app.main import app
+from app.services.plan_service import _sanitize_ai_output
 
 
 def _plan_payload() -> dict:
@@ -75,7 +76,21 @@ def test_plan_to_replan_flow_works_with_safe_fallback(monkeypatch):
         if policy["policy_id"] == 6
     )
     assert after_policy["eligibility_status"] == "AVAILABLE"
+    user_facing_text = " ".join(
+        [
+            replanned["current"]["action_plan"]["summary"],
+            *[
+                action["description"] + " " + action["reason"]
+                for action in replanned["current"]["action_plan"]["actions"]
+            ],
+        ]
+    )
+    assert "CONDITIONAL" not in user_facing_text
+    assert "AVAILABLE" not in user_facing_text
+    assert "desired_deposit" not in user_facing_text
+    assert "조건 조정 필요→신청 가능" in user_facing_text
     assert replanned["current"]["action_plan"]["actions"]
+
 
 def test_ai_failure_uses_stable_503_contract(monkeypatch):
     monkeypatch.setenv("AI_FALLBACK_ENABLED", "false")
@@ -90,3 +105,70 @@ def test_ai_failure_uses_stable_503_contract(monkeypatch):
 
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "AI_TEMPORARILY_UNAVAILABLE"
+
+
+def test_ai_output_text_replaces_internal_codes_with_user_labels():
+    result = _sanitize_ai_output(
+        {
+            "summary": "desired_deposit 변경 후 CONDITIONAL > AVAILABLE",
+            "actions": [
+                {
+                    "title": "planned_move_in_date 확인",
+                    "description": "NEED_MORE_INFO 상태를 확인합니다.",
+                    "reason": "NOT_ELIGIBLE에서 CONDITIONAL로 변경되었습니다.",
+                }
+            ],
+        }
+    )
+
+    user_facing_text = " ".join(
+        [
+            result["summary"],
+            result["actions"][0]["title"],
+            result["actions"][0]["description"],
+            result["actions"][0]["reason"],
+        ]
+    )
+
+    assert "desired_deposit" not in user_facing_text
+    assert "planned_move_in_date" not in user_facing_text
+    assert "CONDITIONAL" not in user_facing_text
+    assert "AVAILABLE" not in user_facing_text
+    assert "NEED_MORE_INFO" not in user_facing_text
+    assert "NOT_ELIGIBLE" not in user_facing_text
+    assert "희망 보증금" in user_facing_text
+    assert "입주 예정일" in user_facing_text
+    assert "조건 조정 필요 > 신청 가능" in user_facing_text
+
+
+def test_past_move_in_date_uses_user_friendly_error_message(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("AI_FALLBACK_ENABLED", "true")
+    client = TestClient(app)
+    payload = _plan_payload()
+    payload["target"]["planned_move_in_date"] = "2020-01-01"
+
+    response = client.post("/api/v1/plan", json=payload)
+
+    assert response.status_code == 422
+    message = response.json()["error"]["message"]
+    assert message == "입주 예정일은 오늘보다 이후 날짜로 선택해주세요."
+    assert "planned_move_in_date" not in message
+
+
+def test_validation_error_uses_user_friendly_field_label():
+    client = TestClient(app)
+    payload = _plan_payload()
+    payload["target"]["desired_deposit"] = -1
+
+    response = client.post("/api/v1/plan", json=payload)
+
+    assert response.status_code == 422
+    error = response.json()["error"]
+    assert error["message"] == "희망 보증금은 0 이상으로 입력해주세요."
+    assert error["details"] == [
+        {
+            "field": "희망 보증금",
+            "reason": "희망 보증금은 0 이상으로 입력해주세요.",
+        }
+    ]
