@@ -464,8 +464,31 @@ function PlanDashboard({ plan }: { plan: PlanResponse }) {
     return { action, phase, dueDate: getActionDueDate(action, phase, phaseEndDates) }
   })
   const [selectedPhase, setSelectedPhase] = useState<Phase>(getReadinessPhase(plan.diagnosis.readiness_score))
+  const [completedIds, setCompletedIds] = useState<Set<number>>(
+    () => new Set(plan.action_plan.actions.filter((a) => a.status === 'DONE').map((a) => a.action_id))
+  )
+
   const visibleActions = actions.filter((item) => item.phase === selectedPhase)
   const fallbackActions = visibleActions.length > 0 ? visibleActions : actions.slice(0, 2)
+
+  const baseScore = plan.diagnosis.readiness_score
+  const totalActions = actions.length
+  const scorePerAction = totalActions > 0 ? Math.round((100 - baseScore) / totalActions) : 0
+  const simulatedScore = Math.min(baseScore + completedIds.size * scorePerAction, 100)
+
+  const simulatedSnapshot = useMemo(
+    () => ({ ...plan, diagnosis: { ...plan.diagnosis, readiness_score: simulatedScore } }),
+    [plan, simulatedScore]
+  )
+
+  const handleStatusChange = (actionId: number, status: 'complete' | 'incomplete') => {
+    setCompletedIds((prev) => {
+      const next = new Set(prev)
+      if (status === 'complete') next.add(actionId)
+      else next.delete(actionId)
+      return next
+    })
+  }
 
   return (
     <PageShell>
@@ -474,7 +497,7 @@ function PlanDashboard({ plan }: { plan: PlanResponse }) {
         description="현재 준비 상태와 다음 행동을 한눈에 확인하세요."
         meta="계획 기준 · 2026.08.18"
       />
-      <ReadinessHero snapshot={plan} />
+      <ReadinessHero snapshot={simulatedSnapshot} />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_416px]">
         <section className="rounded-card border border-border-subtle bg-background-surface p-6">
           <h2 className="type-title text-text-primary">독립 준비 로드맵</h2>
@@ -492,14 +515,15 @@ function PlanDashboard({ plan }: { plan: PlanResponse }) {
           </div>
           <p className="mt-4 type-caption text-text-secondary">~ {formatDate(phaseEndDates[selectedPhase])}</p>
           <div className="mt-4 grid gap-4">
-            {fallbackActions.map(({ action, phase, dueDate }) => (
+            {fallbackActions.map(({ action, dueDate }) => (
               <ActionItem
                 key={action.action_id}
-                status={action.status === 'DONE' ? 'complete' : 'incomplete'}
+                status={completedIds.has(action.action_id) ? 'complete' : 'incomplete'}
                 actionName={action.title}
                 description={`${action.description}${dueDate ? ` · 기한 ${formatDate(dueDate)}` : ''}`}
                 reason={action.reason}
                 aria-label={`${action.title} 완료 상태 변경`}
+                onStatusChange={(status) => handleStatusChange(action.action_id, status)}
               />
             ))}
           </div>
