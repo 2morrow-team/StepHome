@@ -554,7 +554,10 @@ function PlanDashboard({ plan }: { plan: PlanResponse }) {
 function getChangeSummary(scenario: ScenarioOption, snapshot: PlanSnapshot) {
   if (typeof scenario.changes.desired_deposit === 'number') return { label: '보증금', beforeValue: formatCompactWon(snapshot.target.desired_deposit), afterValue: formatCompactWon(scenario.changes.desired_deposit) }
   if (typeof scenario.changes.desired_monthly_rent === 'number') return { label: '월세', beforeValue: formatCompactWon(snapshot.target.desired_monthly_rent), afterValue: formatCompactWon(scenario.changes.desired_monthly_rent) }
-  if (typeof scenario.changes.monthly_savings === 'number') return { label: '월 저축액', beforeValue: formatCompactWon(snapshot.diagnosis.required_monthly_saving), afterValue: formatCompactWon(scenario.changes.monthly_savings) }
+  if (typeof scenario.changes.monthly_savings === 'number') {
+    const cfBefore = scenario.changed_fields?.monthly_savings?.before
+    return { label: '월 저축액', beforeValue: typeof cfBefore === 'number' ? formatCompactWon(cfBefore) : '-', afterValue: formatCompactWon(scenario.changes.monthly_savings) }
+  }
   if (scenario.changes.planned_move_in_date) return { label: '독립 시점', beforeValue: formatMonth(snapshot.target.planned_move_in_date), afterValue: formatMonth(scenario.changes.planned_move_in_date) }
   return { label: '변경 조건', beforeValue: '현재 조건', afterValue: scenario.title }
 }

@@ -196,6 +196,9 @@ Backend가 계산한 Diagnosis, Policy 상태 변화, recommendation_score를 �
 - tradeoff에는 사용자가 감수해야 할 현실적인 단점을 포함
 - 정책 상태 변화가 없으면 있다고 만들지 않음
 - 계산값과 정책 판정을 새로 생성하거나 변경하지 않음
+- reason과 tradeoff는 반드시 사용자가 읽기 쉬운 한국어로만 작성
+- saving_score, fund_score, readiness_score 등 내부 필드명 사용 금지
+- CONDITIONAL, AVAILABLE, NEED_MORE_INFO 등 영어 코드값 사용 금지 → "신청 가능", "조건 충족 시 신청 가능", "추가 확인 필요" 등 한국어로 표현
 
 아래 JSON 형식으로만 응답:
 {{
