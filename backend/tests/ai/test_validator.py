@@ -1,4 +1,5 @@
 import copy
+from datetime import date
 import pytest
 from app.ai.candidate_generator import generate_candidates
 from app.ai.validator import validate_action_plan
@@ -41,6 +42,10 @@ class TestStructureValidation:
         plan = {"summary": "test", "actions": "not a list"}
         with pytest.raises(ValueError, match="구조"):
             validate_action_plan(plan)
+
+    def test_empty_actions_raise(self):
+        with pytest.raises(ValueError, match="최소 1개"):
+            validate_action_plan({"summary": "요약", "actions": []})
 
 
 class TestBackendFieldRejection:
@@ -164,13 +169,19 @@ class TestHallucinationPrevention:
             DIAGNOSIS,
             [POLICY_AVAILABLE],
             monthly_saving=500000,
+            today=date(2026, 4, 1),
         )
         validate_action_plan(copy.deepcopy(VALID_ACTION_PLAN), candidates=candidates)
 
     def test_fixed_policy_due_date_must_match_application_end(self):
         plan = copy.deepcopy(VALID_ACTION_PLAN)
         plan["actions"][1]["due_date"] = "2026-06-30"
-        candidates = generate_candidates(DIAGNOSIS, [POLICY_AVAILABLE], monthly_saving=500000)
+        candidates = generate_candidates(
+            DIAGNOSIS,
+            [POLICY_AVAILABLE],
+            monthly_saving=500000,
+            today=date(2026, 4, 1),
+        )
 
         with pytest.raises(ValueError, match="application_end"):
             validate_action_plan(plan, candidates=candidates)
@@ -178,7 +189,12 @@ class TestHallucinationPrevention:
     def test_fixed_policy_due_date_cannot_be_null(self):
         plan = copy.deepcopy(VALID_ACTION_PLAN)
         plan["actions"][1]["due_date"] = None
-        candidates = generate_candidates(DIAGNOSIS, [POLICY_AVAILABLE], monthly_saving=500000)
+        candidates = generate_candidates(
+            DIAGNOSIS,
+            [POLICY_AVAILABLE],
+            monthly_saving=500000,
+            today=date(2026, 4, 1),
+        )
 
         with pytest.raises(ValueError, match="application_end"):
             validate_action_plan(plan, candidates=candidates)
@@ -199,7 +215,12 @@ class TestHallucinationPrevention:
                 }
             ],
         }
-        candidates = generate_candidates(DIAGNOSIS, [POLICY_CONDITIONAL], monthly_saving=500000)
+        candidates = generate_candidates(
+            DIAGNOSIS,
+            [POLICY_CONDITIONAL],
+            monthly_saving=500000,
+            today=date(2026, 4, 1),
+        )
 
         validate_action_plan(plan, candidates=candidates)
 
@@ -210,3 +231,17 @@ class TestHallucinationPrevention:
 
         with pytest.raises(ValueError, match="null"):
             validate_action_plan(plan, candidates=candidates)
+
+    def test_all_candidates_are_required_when_enabled(self):
+        candidates = generate_candidates(DIAGNOSIS, [], monthly_saving=500000)
+        plan = {
+            "summary": "저축 계획을 조정하세요.",
+            "actions": [copy.deepcopy(VALID_ACTION_PLAN["actions"][0])],
+        }
+
+        with pytest.raises(ValueError, match="생성되지 않은"):
+            validate_action_plan(
+                plan,
+                candidates=candidates,
+                require_all_candidates=True,
+            )

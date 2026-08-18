@@ -1,10 +1,11 @@
 # StepHome Backend 실행 패키지
-fastapi
-uvicorn[standard]
-pydantic
-sqlalchemy
-python-dotenv
-httpx
-openai
-pytest
+fastapi==0.141.1
+uvicorn[standard]==0.52.3
+pydantic==2.13.4
+sqlalchemy==2.0.52
+python-dotenv==1.2.3
+httpx==0.28.1
+openai==3.2.0
+eval_type_backport
+pytest==9.1.1
 # DB 배포시 psycopg[binary] 추가

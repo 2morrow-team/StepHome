@@ -17,6 +17,7 @@ def validate_action_plan(
     action_plan: dict,
     valid_policy_ids: Optional[set[int]] = None,
     candidates: Optional[list[ActionCandidate]] = None,
+    require_all_candidates: bool = False,
 ) -> dict:
     if not isinstance(action_plan, dict):
         raise ValueError("AI ActionPlan 구조가 올바르지 않습니다.")
@@ -24,6 +25,8 @@ def validate_action_plan(
     actions = action_plan.get("actions", [])
     if not action_plan.get("summary") or not isinstance(action_plan["summary"], str) or not isinstance(actions, list):
         raise ValueError("AI ActionPlan 구조가 올바르지 않습니다.")
+    if not actions:
+        raise ValueError("AI ActionPlan에는 최소 1개의 Action이 필요합니다.")
 
     allowed_candidates = None
     candidate_by_key = {}
@@ -78,7 +81,10 @@ def validate_action_plan(
             candidate = candidate_by_key[candidate_key]
             period_type = candidate.context.get("application_period_type")
             due_date = action.get("due_date")
-            if period_type == "FIXED":
+            if candidate.context.get("is_application_closed"):
+                if due_date is not None:
+                    raise ValueError("신청기간이 종료된 정책의 due_date는 null이어야 합니다.")
+            elif period_type == "FIXED":
                 application_end = candidate.context.get("application_end")
                 if application_end is None or str(due_date) != str(application_end):
                     raise ValueError("FIXED 정책의 due_date는 application_end와 동일해야 합니다.")
@@ -88,5 +94,9 @@ def validate_action_plan(
     priorities = [action["priority"] for action in actions]
     if priorities != list(range(1, len(actions) + 1)):
         raise ValueError("priority는 1부터 중복 없이 순서대로 지정해야 합니다.")
+
+    if require_all_candidates and allowed_candidates != used_candidates:
+        missing_candidates = allowed_candidates - used_candidates
+        raise ValueError(f"생성되지 않은 Action 후보가 있습니다: {missing_candidates}")
 
     return action_plan

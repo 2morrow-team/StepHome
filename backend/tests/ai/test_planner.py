@@ -107,3 +107,43 @@ def test_get_client_requires_api_key(monkeypatch):
 
     with pytest.raises(RuntimeError, match="OPENAI_API_KEY"):
         planner._get_client()
+
+
+def test_plan_uses_safe_fallback_when_api_is_unavailable(monkeypatch):
+    monkeypatch.setenv("AI_FALLBACK_ENABLED", "true")
+    monkeypatch.setattr(
+        planner,
+        "_call_llm",
+        lambda *_args: (_ for _ in ()).throw(RuntimeError("API unavailable")),
+    )
+    ai_input = {
+        "user": {"monthly_savings": 300_000},
+        "target": {},
+        "diagnosis": DIAGNOSIS,
+        "matched_policies": [],
+    }
+
+    result = planner.generate_action_plan(ai_input)
+
+    assert [action["action_type"] for action in result["actions"]] == [
+        "SAVING",
+        "CONTRACT",
+    ]
+
+
+def test_disabled_fallback_returns_ai_planner_error(monkeypatch):
+    monkeypatch.setenv("AI_FALLBACK_ENABLED", "false")
+    monkeypatch.setattr(
+        planner,
+        "_call_llm",
+        lambda *_args: (_ for _ in ()).throw(RuntimeError("API unavailable")),
+    )
+    ai_input = {
+        "user": {"monthly_savings": 300_000},
+        "target": {},
+        "diagnosis": DIAGNOSIS,
+        "matched_policies": [],
+    }
+
+    with pytest.raises(planner.AIPlannerError):
+        planner.generate_action_plan(ai_input)

@@ -1,10 +1,11 @@
 # API 요청/응답에서 사용하는 공통 Pydantic Schema
+from __future__ import annotations
 
 from datetime import date, datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # =========================================================
@@ -100,6 +101,18 @@ class ActionStatus(str, Enum):
     TODO = "TODO"
     IN_PROGRESS = "IN_PROGRESS"
     DONE = "DONE"
+
+
+class ScenarioPriority(str, Enum):
+    FAST_MOVE = "FAST_MOVE"
+    LOW_MONTHLY_BURDEN = "LOW_MONTHLY_BURDEN"
+    POLICY_BENEFIT = "POLICY_BENEFIT"
+
+
+class ScenarioId(str, Enum):
+    LOWER_DEPOSIT = "LOWER_DEPOSIT"
+    DELAY_MOVE_IN = "DELAY_MOVE_IN"
+    INCREASE_SAVINGS = "INCREASE_SAVINGS"
 
 
 # =========================================================
@@ -218,6 +231,27 @@ class ReplanRequest(BaseModel):
     previous_plan_id: int = Field(gt=0)
 
     changes: ReplanChanges
+
+
+class ScenarioConstraints(BaseModel):
+    """시나리오가 사용자의 허용 범위를 벗어나지 않도록 제한한다."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    minimum_desired_deposit: int | None = Field(default=None, ge=0)
+    max_additional_monthly_savings: int = Field(default=500_000, ge=0)
+    max_move_delay_months: int = Field(default=6, ge=0, le=24)
+
+
+class ScenarioRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    user_id: int = Field(gt=0)
+    target_id: int = Field(gt=0)
+    previous_diagnosis_id: int = Field(gt=0)
+    previous_plan_id: int = Field(gt=0)
+    priority: ScenarioPriority
+    constraints: ScenarioConstraints = Field(default_factory=ScenarioConstraints)
 
 
 # =========================================================
@@ -414,6 +448,45 @@ class ReplanResponse(BaseModel):
     current: PlanSnapshot
 
     changed_fields: dict[str, ChangedField]
+
+
+# =========================================================
+# Scenario Response
+# =========================================================
+
+
+class ScenarioDiagnosis(BaseModel):
+    readiness_score: int
+    fund_score: float
+    saving_score: float
+    required_initial_fund: int
+    initial_fund_gap: int
+    required_monthly_saving: int
+    estimated_months: int | None
+
+
+class PolicyStatusChange(BaseModel):
+    policy_id: int
+    title: str
+    before_status: EligibilityStatus
+    after_status: EligibilityStatus
+
+
+class ScenarioOption(BaseModel):
+    scenario_id: ScenarioId
+    title: str
+    changes: ReplanChanges
+    diagnosis: ScenarioDiagnosis
+    policy_changes: list[PolicyStatusChange]
+    recommendation_score: int = Field(ge=0, le=100)
+    ai_reason: str
+    tradeoff: str
+
+
+class ScenarioResponse(BaseModel):
+    recommended_scenario_id: ScenarioId
+    summary: str
+    scenarios: list[ScenarioOption] = Field(min_length=1)
 
 
 # =========================================================

@@ -1,5 +1,12 @@
 import { fetchJson } from './fetcher'
-import type { PlanRequest, PlanResponse, ReplanRequest, ReplanResponse } from '../types/api'
+import type {
+  PlanRequest,
+  PlanResponse,
+  ReplanRequest,
+  ReplanResponse,
+  ScenarioRequest,
+  ScenarioResponse,
+} from '../types/api'
 
 export function createPlan(request: PlanRequest) {
   return fetchJson<PlanResponse>('/api/v1/plan', {
@@ -10,6 +17,13 @@ export function createPlan(request: PlanRequest) {
 
 export function replan(request: ReplanRequest) {
   return fetchJson<ReplanResponse>('/api/v1/replan', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  })
+}
+
+export function compareScenarios(request: ScenarioRequest) {
+  return fetchJson<ScenarioResponse>('/api/v1/scenarios', {
     method: 'POST',
     body: JSON.stringify(request),
   })

@@ -88,10 +88,13 @@ Action 생성 규칙:
     - missing_conditions도 있으면 추가 확인이 필요하다고 함께 안내하고, 조건 변경만으로 신청 가능하다고 단정하지 않음
   - NEED_MORE_INFO: 부족 정보 확인 안내 Action 생성, 신청 추천하지 않음
   - NOT_ELIGIBLE: 해당 정책 관련 Action 생성하지 않음
+- POLICY_MONITOR 후보는 신청기간이 이미 끝난 정책이므로 현재 신청을 권하지 않고 다음 모집공고 확인을 안내
 - 허용된 action_type: SAVING, POLICY, HOUSING, CONTRACT
 - 허용된 timing: NOW, PREPARE, SEARCH_HOUSE, BEFORE_CONTRACT
-- application_period_type이 FIXED인 정책의 due_date는 application_end와 동일
+- is_application_closed가 true인 정책의 due_date는 null
+- 신청기간이 종료되지 않았고 application_period_type이 FIXED인 정책의 due_date는 application_end와 동일
 - application_period_type이 FIXED가 아닌 정책의 due_date는 null
+- 제시된 모든 Action 후보를 각각 정확히 1개 Action으로 생성
 - priority는 1부터 순서대로"""
 
 
@@ -101,8 +104,8 @@ def _format_candidates(candidates: list[ActionCandidate]) -> str:
         line = f"- [{c.action_type}] {c.basis}"
         if c.policy_id is not None:
             line += f" (policy_id={c.policy_id})"
-        if c.context.get("title"):
-            line += f": {c.context['title']}"
+        if c.context:
+            line += f" context={json.dumps(c.context, ensure_ascii=False, default=str)}"
         lines.append(line)
     return "\n".join(lines)
 
@@ -147,6 +150,41 @@ def build_replan_prompt(
 
 {_OUTPUT_FORMAT}"""
     return _SYSTEM_PROMPT, user
+
+
+def build_scenario_prompt(
+    scenario_ai_input: dict[str, Any],
+) -> tuple[str, str]:
+    system = """당신은 청년의 독립 조건 대안을 비교하는 의사결정 지원 전문가입니다.
+Backend가 계산한 Diagnosis, Policy 상태 변화, recommendation_score를 절대 수정하거나 재계산하지 않습니다.
+반드시 제공된 scenario_id만 사용해 JSON으로 응답하세요."""
+
+    user = f"""다음은 검증된 독립 조건 시나리오 비교 결과입니다.
+
+{json.dumps(scenario_ai_input, ensure_ascii=False, indent=2, default=str)}
+
+추천 규칙:
+- 입력의 recommended_scenario_id를 그대로 사용하며 임의로 다른 시나리오를 선택하지 않음
+- recommendation_score가 같을 때도 Backend가 확정한 recommended_scenario_id를 따름
+- 모든 시나리오에 대해 reason과 tradeoff를 각각 정확히 1개 생성
+- reason에는 현재 조건 대비 좋아지는 수치를 근거로 포함
+- tradeoff에는 사용자가 감수해야 할 현실적인 단점을 포함
+- 정책 상태 변화가 없으면 있다고 만들지 않음
+- 계산값과 정책 판정을 새로 생성하거나 변경하지 않음
+
+아래 JSON 형식으로만 응답:
+{{
+  "recommended_scenario_id": "LOWER_DEPOSIT",
+  "summary": "비교 결과를 요약한 1~2문장",
+  "explanations": [
+    {{
+      "scenario_id": "LOWER_DEPOSIT",
+      "reason": "추천 또는 평가 이유",
+      "tradeoff": "사용자가 감수해야 할 점"
+    }}
+  ]
+}}"""
+    return system, user
 
 
 def build_ai_input(

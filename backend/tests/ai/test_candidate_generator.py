@@ -1,4 +1,5 @@
 import copy
+from datetime import date
 
 import pytest
 from app.ai.candidate_generator import generate_candidates
@@ -36,9 +37,24 @@ class TestSavingCandidate:
 
 class TestPolicyCandidates:
     def test_available_policy_generates_policy_apply(self):
-        candidates = generate_candidates(DIAGNOSIS, [POLICY_AVAILABLE])
+        candidates = generate_candidates(
+            DIAGNOSIS,
+            [POLICY_AVAILABLE],
+            today=date(2026, 4, 1),
+        )
         policy_candidates = [c for c in candidates if c.action_type == "POLICY"]
         assert any(c.basis == CandidateBasis.POLICY_APPLY for c in policy_candidates)
+
+    def test_closed_available_policy_generates_monitor_action(self):
+        candidates = generate_candidates(
+            DIAGNOSIS,
+            [POLICY_AVAILABLE],
+            today=date(2026, 8, 18),
+        )
+        candidate = next(c for c in candidates if c.policy_id == POLICY_AVAILABLE["policy_id"])
+
+        assert candidate.basis == CandidateBasis.POLICY_MONITOR
+        assert candidate.context["is_application_closed"] is True
 
     def test_conditional_policy_generates_condition_adjust(self):
         candidates = generate_candidates(DIAGNOSIS, [POLICY_CONDITIONAL])

@@ -1,4 +1,6 @@
 # 데이터베이스 연결 설정
+
+from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
