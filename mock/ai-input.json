@@ -43,17 +43,6 @@
       "matched_conditions": ["AGE", "HOUSING_STATUS", "HOUSING_TYPE", "INCOME"],
       "failed_conditions": [],
       "missing_conditions": [],
-      "condition_details": [
-        {
-          "condition": "AGE",
-          "result": "MATCHED",
-          "current_value": 25,
-          "required_min": 19,
-          "required_max": 34,
-          "required_values": null,
-          "message": "연령 조건을 충족합니다."
-        }
-      ],
       "rank": 1,
       "support_amount": 200000,
       "support_amount_unit": "MONTH",
@@ -69,35 +58,24 @@
       "match_id": 2,
       "policy_id": 6,
       "title": "서울시 청년월세지원",
-      "description": "서울에 거주하는 청년의 주거비 부담 완화와 안정적 주거환경 마련을 위해 월세를 지원하는 사업",
+      "description": "서울시 청년의 주거비 부담 경감을 위한 월세 지원",
       "policy_category": "RENT_SUPPORT",
-      "policy_region": "서울특별시",
+      "policy_region": "서울",
       "policy_provider": "서울특별시",
       "eligibility_status": "CONDITIONAL",
       "matched_conditions": ["AGE", "HOUSING_STATUS", "HOUSING_TYPE", "REGION"],
       "failed_conditions": ["DEPOSIT_LIMIT"],
       "missing_conditions": [],
-      "condition_details": [
-        {
-          "condition": "DEPOSIT_LIMIT",
-          "result": "FAILED",
-          "current_value": 90000000,
-          "required_min": null,
-          "required_max": 80000000,
-          "required_values": null,
-          "message": "희망 보증금이 정책 기준을 초과합니다."
-        }
-      ],
       "rank": 2,
       "support_amount": 200000,
       "support_amount_unit": "MONTH",
-      "support_amount_text": "월 최대 20만원의 임차료를 최대 12개월 지원하며 생애 1회 지원",
-      "eligibility_text": "신청일 기준 서울시에 거주하는 19~39세 무주택 청년으로, 임차보증금 8천만원 이하 및 월세 60만원 이하 건물에 월세로 거주하며 가구당 기준 중위소득 48% 초과 ~ 150% 이하여야 함",
-      "application_start": "2026-05-06",
-      "application_end": "2026-05-19",
+      "support_amount_text": "월 최대 20만원, 최대 12개월 지원",
+      "eligibility_text": "서울시 거주 무주택 청년 대상, 보증금 8천만원 이하",
+      "application_start": "2026-04-01",
+      "application_end": "2026-05-31",
       "application_period_type": "FIXED",
-      "source_url": "https://housing.seoul.go.kr/site/main/content/sh01_060513",
-      "checked_at": "2026-08-16T20:36:00+09:00"
+      "source_url": "https://youth.seoul.go.kr",
+      "checked_at": "2026-08-15T20:36:00+09:00"
     },
     {
       "match_id": 3,
@@ -111,17 +89,6 @@
       "matched_conditions": ["AGE", "HOUSING_STATUS"],
       "failed_conditions": ["HOUSING_TYPE"],
       "missing_conditions": [],
-      "condition_details": [
-        {
-          "condition": "HOUSING_TYPE",
-          "result": "FAILED",
-          "current_value": "MONTHLY_RENT",
-          "required_min": null,
-          "required_max": null,
-          "required_values": ["JEONSE"],
-          "message": "희망 주거유형이 정책 대상과 다릅니다."
-        }
-      ],
       "rank": 3,
       "support_amount": null,
       "support_amount_unit": "OTHER",

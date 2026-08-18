@@ -4,8 +4,8 @@
     "message": "입력값을 확인해주세요.",
     "details": [
       {
-        "field": "current_emergency_fund",
-        "reason": "current_savings보다 클 수 없습니다."
+        "field": "target.desired_deposit",
+        "reason": "희망 보증금은 0원 이상이어야 합니다."
       }
     ]
   }
