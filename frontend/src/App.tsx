@@ -47,6 +47,9 @@ type SelectOption<T extends string> = {
 
 type Phase = 1 | 2 | 3 | 4
 
+const FORM_CONTROL_CLASS =
+  'box-border h-12 min-h-12 w-full rounded-subtle border border-border-default bg-background-control px-3 py-0 type-body leading-5 text-text-primary'
+
 const REGION_OPTIONS: Array<SelectOption<Region>> = [
   { value: 'SEOUL', label: '서울' },
   { value: 'BUSAN', label: '부산' },
@@ -239,7 +242,7 @@ function StepPills({ activeStep }: { activeStep: 1 | 2 }) {
                 : 'border-border-subtle bg-background-control text-text-secondary'
             }`}
           >
-            {step} {step === 1 ? '내 정보 입력' : '목표 설정'}
+            {step}. {step === 1 ? '내 정보 입력' : '목표 설정'}
           </span>
         ))}
       </div>
@@ -269,7 +272,7 @@ function TextInputField({
     <label className="grid min-w-0 gap-2">
       <span className="type-label text-text-primary">{label}</span>
       <input
-        className="min-h-12 w-full rounded-subtle border border-border-default bg-background-control px-3 type-body text-text-primary"
+        className={FORM_CONTROL_CLASS}
         type={type}
         min={min}
         value={value}
@@ -300,7 +303,7 @@ function SelectInputField<T extends string>({
     <label className="grid min-w-0 gap-2">
       <span className="type-label text-text-primary">{label}</span>
       <select
-        className="min-h-12 w-full rounded-subtle border border-border-default bg-background-control px-3 type-body text-text-primary"
+        className={FORM_CONTROL_CLASS}
         value={value}
         onChange={(event) => onChange(event.target.value as T)}
       >
@@ -476,7 +479,7 @@ function PlanDashboard({ plan }: { plan: PlanResponse }) {
       />
       <ReadinessHero snapshot={plan} />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_416px]">
-        <section className="rounded-card border border-border-subtle bg-background-surface p-6">
+        <section className="min-w-0 rounded-card border border-border-subtle bg-background-surface p-6">
           <h2 className="type-title text-text-primary">독립 준비 로드맵</h2>
           <div className="mt-4 flex flex-wrap gap-2">
             {[1, 2, 3, 4].map((phase) => (
@@ -504,7 +507,7 @@ function PlanDashboard({ plan }: { plan: PlanResponse }) {
             ))}
           </div>
         </section>
-        <section className="rounded-card border border-border-subtle bg-background-surface p-6">
+        <section className="min-w-0 overflow-hidden rounded-card border border-border-subtle bg-background-surface p-6">
           <h2 className="type-title text-text-primary">나에게 맞는 지원</h2>
           <div className="mt-4 grid gap-4">
             {plan.matched_policies.slice(0, 4).map((policy) => (
@@ -518,9 +521,6 @@ function PlanDashboard({ plan }: { plan: PlanResponse }) {
               />
             ))}
           </div>
-          <a href="https://www.myhome.go.kr" target="_blank" rel="noreferrer" className="mt-5 inline-block type-label text-action-primary hover:text-action-hover">
-            마이홈 · LH 공식 정보 확인 ↗
-          </a>
         </section>
       </div>
     </PageShell>
@@ -550,25 +550,25 @@ function buildScenarioRequest(plan: PlanSnapshot, priority: ScenarioPriority) {
   }
 }
 
-function ChangedFieldsSummary({ replanResult }: { replanResult: ReplanResponse }) {
+function ChangedFieldsSummary({ replanResult, showDetails = true }: { replanResult: ReplanResponse; showDetails?: boolean }) {
   const changedEntries = Object.entries(replanResult.changed_fields)
 
   return (
     <section className="rounded-card border border-border-subtle bg-background-surface p-6">
       <p className="type-label text-action-primary">요약</p>
       <p className="mt-2 type-heading text-text-primary">{replanResult.current.action_plan.summary}</p>
-      <div className="mt-5 grid gap-3 md:grid-cols-3">
-        <MetricCard label="변경 전 준비도" value={`${replanResult.previous.diagnosis.readiness_score}점`} supportingText={`월 저축 ${formatCompactWon(replanResult.previous.diagnosis.required_monthly_saving)}`} />
-        <MetricCard label="변경 후 준비도" value={`${replanResult.current.diagnosis.readiness_score}점`} supportingText={`월 저축 ${formatCompactWon(replanResult.current.diagnosis.required_monthly_saving)}`} />
-        <div className="rounded-card bg-background-surface p-5 shadow-card">
-          <p className="type-caption text-text-secondary">변경 조건</p>
-          <ul className="mt-2 grid gap-1 type-body text-text-primary">
-            {changedEntries.length === 0 ? <li>변경 없음</li> : changedEntries.map(([field, change]) => (
-              <li key={field}>{field}: {String(change.before)} → {String(change.after)}</li>
-            ))}
-          </ul>
+      {showDetails && (
+        <div className="mt-5 grid gap-3">
+          <div className="rounded-card bg-background-surface p-5 shadow-card">
+            <p className="type-caption text-text-secondary">변경 조건</p>
+            <ul className="mt-2 grid gap-1 type-body text-text-primary">
+              {changedEntries.length === 0 ? <li>변경 없음</li> : changedEntries.map(([field, change]) => (
+                <li key={field}>{field}: {String(change.before)} → {String(change.after)}</li>
+              ))}
+            </ul>
+          </div>
         </div>
-      </div>
+      )}
     </section>
   )
 }
@@ -594,7 +594,7 @@ function AiSimulatorPage({
     <PageShell>
       <PageHeader title="AI 독립 조건 시뮬레이터" description="현재 계획을 바탕으로 현실적인 대안을 비교해보세요." />
       {latestReplan ? (
-        <ChangedFieldsSummary replanResult={latestReplan} />
+        <ChangedFieldsSummary replanResult={latestReplan} showDetails={false} />
       ) : (
         <section className="rounded-card border border-border-subtle bg-background-surface p-6">
           <p className="type-label text-action-primary">요약</p>

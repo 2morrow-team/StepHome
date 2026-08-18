@@ -35,7 +35,7 @@ export function PolicyCard({
 
   return (
     <article
-      className={joinClasses('flex min-h-[116px] w-full flex-col gap-3 rounded-card bg-background-surface p-5 shadow-card', className)}
+      className={joinClasses('flex min-h-[116px] min-w-0 w-full flex-col gap-3 overflow-hidden rounded-card bg-background-surface p-5 shadow-card', className)}
       {...props}
     >
       <div className="flex min-w-0 items-start justify-between gap-4">
@@ -49,6 +49,7 @@ export function PolicyCard({
             href={href}
             target="_blank"
             rel="noreferrer"
+            aria-label={`${title} 바로가기`}
             className="shrink-0 type-caption text-action-primary hover:text-action-hover"
             onClick={(event) => event.stopPropagation()}
           >
