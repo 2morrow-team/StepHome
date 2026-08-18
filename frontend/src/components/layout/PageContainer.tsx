@@ -8,7 +8,7 @@ export type PageContainerProps = PropsWithChildren<ComponentPropsWithoutRef<'mai
 
 export function PageContainer({ className, children, ...props }: PageContainerProps) {
   return (
-    <main className={joinClasses('mx-auto w-full max-w-[640px] px-4 sm:px-6', className)} {...props}>
+    <main className={joinClasses('mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8', className)} {...props}>
       {children}
     </main>
   )

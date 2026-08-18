@@ -115,6 +115,7 @@ export interface Action {
   plan_id: number
   user_id: number
   diagnosis_id: number
+  phase?: 1 | 2 | 3 | 4
   priority: number
   action_type: ActionType
   timing: Timing
@@ -133,6 +134,8 @@ export interface ActionPlan {
 }
 
 export interface PlanSnapshot {
+  user_id: number
+  target_id: number
   diagnosis_id: number
   plan_id: number
   target: TargetResponse
@@ -141,10 +144,7 @@ export interface PlanSnapshot {
   action_plan: ActionPlan
 }
 
-export interface PlanResponse extends PlanSnapshot {
-  user_id: number
-  target_id: number
-}
+export type PlanResponse = PlanSnapshot
 
 export type ReplanChanges = Partial<PlanRequest['user'] & PlanRequest['target']>
 
