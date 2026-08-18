@@ -28,7 +28,7 @@ def months_until_target(
 
     if planned_move_in_date <= current_date:
         raise ValueError(
-            "planned_move_in_date는 현재 날짜보다 미래여야 합니다."
+            "입주 예정일은 오늘보다 이후 날짜로 선택해주세요."
         )
 
     remaining_days = (planned_move_in_date - current_date).days

@@ -1,10 +1,10 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { compareScenarios, createPlan, replan } from './api/plan.api'
 import { ActionItem, AiScenarioCard, Button, GlobalNav, MetricCard, PolicyCard, StatusBadge } from './components'
 import UiPreview from './previews/UiPreview'
-import { toPlanRequest, usePlanStore } from './stores/plan-store'
+import { toPlanRequest, usePlanStore, useRoadmapProgressStore } from './stores/plan-store'
 import type { PlanDraft } from './stores/plan-store'
 import type { StatusBadgeProps } from './components'
 import type {
@@ -112,6 +112,24 @@ const POLICY_BADGE_STATUS: Record<EligibilityStatus, StatusBadgeProps['status']>
   NOT_ELIGIBLE: 'unavailable',
 }
 
+const CHANGE_FIELD_LABELS: Record<string, string> = {
+  age: '나이',
+  employment_status: '취업상태',
+  current_region: '현재 거주 지역',
+  personal_monthly_income: '본인 월 소득',
+  total_assets: '총 보유자금',
+  monthly_savings: '월 저축액',
+  housing_status: '주택 소유 여부',
+  youth_household_monthly_income: '청년가구 월 소득',
+  youth_household_size: '청년가구 수',
+  marital_status: '혼인 여부',
+  planned_move_in_date: '독립 예정일',
+  desired_region: '희망 거주 지역',
+  desired_deposit: '희망 보증금',
+  desired_monthly_rent: '희망 월세',
+  desired_housing_type: '희망 주거 형태',
+}
+
 const phaseImages: Record<Phase, string> = {
   1: phase1Image,
   2: phase2Image,
@@ -143,6 +161,31 @@ function formatDate(value: string) {
   return value.replace(/-/g, '.')
 }
 
+function formatChangedValue(field: string, value: unknown) {
+  if (typeof value === 'number') {
+    if (field === 'age') return `${value}세`
+    if (field === 'youth_household_size') return `${value}명`
+    return formatCompactWon(value)
+  }
+  if (typeof value === 'string' && (field === 'current_region' || field === 'desired_region')) {
+    return getOptionLabel(REGION_OPTIONS, value as Region)
+  }
+  if (typeof value === 'string' && field === 'employment_status') {
+    return getOptionLabel(EMPLOYMENT_OPTIONS, value as EmploymentStatus)
+  }
+  if (typeof value === 'string' && field === 'housing_status') {
+    return getOptionLabel(HOUSING_STATUS_OPTIONS, value as HousingStatus)
+  }
+  if (typeof value === 'string' && field === 'marital_status') {
+    return getOptionLabel(MARITAL_OPTIONS, value as MaritalStatus)
+  }
+  if (typeof value === 'string' && field === 'desired_housing_type') {
+    return getOptionLabel(HOUSING_TYPE_OPTIONS, value as HousingType)
+  }
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return formatDate(value)
+  return String(value)
+}
+
 function getOptionLabel<T extends string>(options: Array<SelectOption<T>>, value: T) {
   return options.find((option) => option.value === value)?.label ?? value
 }
@@ -152,6 +195,15 @@ function getReadinessPhase(score: number): Phase {
   if (score <= 50) return 2
   if (score <= 75) return 3
   return 4
+}
+
+export function getSimulatedReadinessScore(baseScore: number, totalActions: number, completedActions: number) {
+  if (totalActions <= 0) return Math.min(Math.max(baseScore, 0), 100)
+
+  const remainingScore = 100 - baseScore
+  const completionRatio = Math.min(Math.max(completedActions / totalActions, 0), 1)
+
+  return Math.min(Math.max(baseScore + Math.round(remainingScore * completionRatio), 0), 100)
 }
 
 function getDday(date: string) {
@@ -467,17 +519,23 @@ function PlanDashboard({ plan }: { plan: PlanResponse }) {
     return { action, phase, dueDate: getActionDueDate(action, phase, phaseEndDates) }
   })
   const [selectedPhase, setSelectedPhase] = useState<Phase>(getReadinessPhase(plan.diagnosis.readiness_score))
-  const [completedIds, setCompletedIds] = useState<Set<number>>(
-    () => new Set(plan.action_plan.actions.filter((a) => a.status === 'DONE').map((a) => a.action_id))
-  )
+  const ensurePlanProgress = useRoadmapProgressStore((state) => state.ensurePlanProgress)
+  const setActionCompleted = useRoadmapProgressStore((state) => state.setActionCompleted)
+  const storedCompletedActionIds = useRoadmapProgressStore((state) => state.completedActionIdsByPlan[String(plan.plan_id)])
+
+  useEffect(() => {
+    ensurePlanProgress(plan.plan_id, plan.action_plan.actions)
+  }, [ensurePlanProgress, plan.action_plan.actions, plan.plan_id])
+
+  const completedActionIds = storedCompletedActionIds ?? plan.action_plan.actions.filter((action) => action.status === 'DONE').map((action) => action.action_id)
+  const completedIds = useMemo(() => new Set(completedActionIds), [completedActionIds])
 
   const visibleActions = actions.filter((item) => item.phase === selectedPhase)
   const fallbackActions = visibleActions.length > 0 ? visibleActions : actions.slice(0, 2)
 
   const baseScore = plan.diagnosis.readiness_score
   const totalActions = actions.length
-  const scorePerAction = totalActions > 0 ? Math.round((100 - baseScore) / totalActions) : 0
-  const simulatedScore = Math.min(baseScore + completedIds.size * scorePerAction, 100)
+  const simulatedScore = getSimulatedReadinessScore(baseScore, totalActions, completedIds.size)
 
   const simulatedSnapshot = useMemo(
     () => ({ ...plan, diagnosis: { ...plan.diagnosis, readiness_score: simulatedScore } }),
@@ -485,12 +543,7 @@ function PlanDashboard({ plan }: { plan: PlanResponse }) {
   )
 
   const handleStatusChange = (actionId: number, status: 'complete' | 'incomplete') => {
-    setCompletedIds((prev) => {
-      const next = new Set(prev)
-      if (status === 'complete') next.add(actionId)
-      else next.delete(actionId)
-      return next
-    })
+    setActionCompleted(plan.plan_id, actionId, status === 'complete')
   }
 
   return (
@@ -577,7 +630,15 @@ function buildScenarioRequest(plan: PlanSnapshot, priority: ScenarioPriority) {
   }
 }
 
-function ChangedFieldsSummary({ replanResult, showDetails = true }: { replanResult: ReplanResponse; showDetails?: boolean }) {
+function ChangedFieldsSummary({
+  replanResult,
+  showDetails = true,
+  onViewRoadmap,
+}: {
+  replanResult: ReplanResponse
+  showDetails?: boolean
+  onViewRoadmap?: () => void
+}) {
   const changedEntries = Object.entries(replanResult.changed_fields)
 
   return (
@@ -590,10 +651,17 @@ function ChangedFieldsSummary({ replanResult, showDetails = true }: { replanResu
             <p className="type-caption text-text-secondary">변경 조건</p>
             <ul className="mt-2 grid gap-1 type-body text-text-primary">
               {changedEntries.length === 0 ? <li>변경 없음</li> : changedEntries.map(([field, change]) => (
-                <li key={field}>{field}: {String(change.before)} → {String(change.after)}</li>
+                <li key={field}>
+                  {CHANGE_FIELD_LABELS[field] ?? '변경 조건'}: {formatChangedValue(field, change.before)} → {formatChangedValue(field, change.after)}
+                </li>
               ))}
             </ul>
           </div>
+        </div>
+      )}
+      {onViewRoadmap && (
+        <div className="mt-5 flex justify-end">
+          <Button className="w-60" onClick={onViewRoadmap}>변경된 로드맵 보러가기</Button>
         </div>
       )}
     </section>
@@ -674,12 +742,14 @@ function ReplanPage({
   isPending,
   error,
   onSubmit,
+  onViewRoadmap,
 }: {
   plan: PlanResponse | null
   latestReplan: ReplanResponse | null
   isPending: boolean
   error?: Error | null
   onSubmit: (changes: ReplanChanges) => void
+  onViewRoadmap: () => void
 }) {
   const [draft, setDraft] = useState<Record<string, string>>({})
   if (!plan) return <PlanGuard />
@@ -713,7 +783,7 @@ function ReplanPage({
         <Button className="w-60" disabled={isPending} onClick={handleSubmit}>내 독립 플랜 다시 만들기</Button>
       </div>
       {error && <p className="rounded-control bg-status-danger-background p-4 type-body text-status-danger">{error.message}</p>}
-      {latestReplan && <ChangedFieldsSummary replanResult={latestReplan} />}
+      {latestReplan && <ChangedFieldsSummary replanResult={latestReplan} onViewRoadmap={onViewRoadmap} />}
     </PageShell>
   )
 }
@@ -747,7 +817,10 @@ function AppRoutes() {
     mutationFn: replan,
     onSuccess: (result) => {
       setLatestAiReplan(result)
+      setLatestManualReplan(null)
       setCurrentPlan(result.current)
+      setScenarioResult(null)
+      navigate('/')
     },
   })
 
@@ -755,7 +828,9 @@ function AppRoutes() {
     mutationFn: replan,
     onSuccess: (result) => {
       setLatestManualReplan(result)
+      setLatestAiReplan(null)
       setCurrentPlan(result.current)
+      setScenarioResult(null)
     },
   })
 
@@ -826,6 +901,7 @@ function AppRoutes() {
             isPending={manualReplanMutation.isPending}
             error={manualReplanMutation.error}
             onSubmit={handleReplanSubmit}
+            onViewRoadmap={() => navigate('/')}
           />
         }
       />

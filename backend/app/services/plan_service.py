@@ -101,6 +101,46 @@ _TARGET_FIELDS = {
     "desired_region",
 }
 
+_USER_FACING_TEXT_REPLACEMENTS = (
+    ("planned_move_in_date", "입주 예정일"),
+    ("desired_monthly_rent", "희망 월세"),
+    ("desired_housing_type", "희망 주거 형태"),
+    ("desired_deposit", "희망 보증금"),
+    ("desired_region", "희망 지역"),
+    ("monthly_savings", "월 저축액"),
+    ("total_assets", "총자산"),
+    ("personal_monthly_income", "월 소득"),
+    ("youth_household_monthly_income", "가구 월소득"),
+    ("youth_household_size", "가구원 수"),
+    ("employment_status", "고용 상태"),
+    ("current_region", "현재 거주 지역"),
+    ("housing_status", "주거 상태"),
+    ("marital_status", "혼인 상태"),
+    ("NEED_MORE_INFO", "추가 확인 필요"),
+    ("NOT_ELIGIBLE", "현재 대상 아님"),
+    ("CONDITIONAL", "조건 조정 필요"),
+    ("AVAILABLE", "신청 가능"),
+)
+
+
+def _sanitize_user_facing_text(text: str) -> str:
+    for source, label in _USER_FACING_TEXT_REPLACEMENTS:
+        text = text.replace(source, label)
+    return text
+
+
+def _sanitize_ai_output(ai_output: dict[str, Any]) -> dict[str, Any]:
+    sanitized = deepcopy(ai_output)
+    if isinstance(sanitized.get("summary"), str):
+        sanitized["summary"] = _sanitize_user_facing_text(sanitized["summary"])
+
+    for action in sanitized.get("actions", []):
+        for field in ("title", "description", "reason"):
+            if isinstance(action.get(field), str):
+                action[field] = _sanitize_user_facing_text(action[field])
+
+    return sanitized
+
 
 # =========================================================
 # Plan Service
@@ -335,7 +375,7 @@ class PlanService:
 
             else:
                 raise ValueError(
-                    f"변경할 수 없는 필드입니다: {field}"
+                    "변경할 수 없는 항목입니다."
                 )
 
         # ---------------------------------------------
@@ -519,6 +559,9 @@ class PlanService:
         """
 
         now = datetime.now(KST)
+        ai_output = _sanitize_ai_output(
+            ai_output
+        )
 
         actions: list[dict[str, Any]] = []
 

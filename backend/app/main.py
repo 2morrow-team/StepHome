@@ -12,6 +12,88 @@ from app.ai.planner import AIPlannerError
 from app.schemas.schemas import HealthResponse
 
 
+FIELD_LABELS = {
+    "user.age": "나이",
+    "user.employment_status": "고용 상태",
+    "user.current_region": "현재 거주 지역",
+    "user.personal_monthly_income": "월 소득",
+    "user.total_assets": "총 자산",
+    "user.monthly_savings": "월 저축액",
+    "user.housing_status": "주거 상태",
+    "user.youth_household_monthly_income": "가구 월소득",
+    "user.youth_household_size": "가구원 수",
+    "user.marital_status": "혼인 상태",
+    "target.planned_move_in_date": "입주 예정일",
+    "target.desired_deposit": "희망 보증금",
+    "target.desired_monthly_rent": "희망 월세",
+    "target.desired_housing_type": "희망 주거 유형",
+    "target.desired_region": "희망 지역",
+    "changes.age": "나이",
+    "changes.employment_status": "고용 상태",
+    "changes.current_region": "현재 거주 지역",
+    "changes.personal_monthly_income": "월 소득",
+    "changes.total_assets": "총 자산",
+    "changes.monthly_savings": "월 저축액",
+    "changes.housing_status": "주거 상태",
+    "changes.youth_household_monthly_income": "가구 월소득",
+    "changes.youth_household_size": "가구원 수",
+    "changes.marital_status": "혼인 상태",
+    "changes.planned_move_in_date": "입주 예정일",
+    "changes.desired_deposit": "희망 보증금",
+    "changes.desired_monthly_rent": "희망 월세",
+    "changes.desired_housing_type": "희망 주거 유형",
+    "changes.desired_region": "희망 지역",
+    "user_id": "사용자 정보",
+    "target_id": "목표 정보",
+    "previous_diagnosis_id": "이전 진단 정보",
+    "previous_plan_id": "이전 계획 정보",
+    "priority": "목표 우선순위",
+    "constraints.minimum_desired_deposit": "최소 희망 보증금",
+    "constraints.max_additional_monthly_savings": "추가 가능한 월 저축액",
+    "constraints.max_move_delay_months": "미룰 수 있는 최대 기간",
+}
+
+
+def _field_label(field: str) -> str:
+    return FIELD_LABELS.get(field, "입력 항목")
+
+
+def _validation_reason(error: dict, label: str) -> str:
+    error_type = str(error.get("type", ""))
+    ctx = error.get("ctx") or {}
+
+    if error_type == "missing":
+        return f"{label}을 입력해주세요."
+
+    if error_type in {
+        "date_from_datetime_inexact",
+        "date_from_datetime_parsing",
+        "date_parsing",
+        "date_type",
+    }:
+        return f"{label}을 올바른 날짜로 입력해주세요."
+
+    if error_type in {"int_parsing", "int_type"}:
+        return f"{label}은 숫자로 입력해주세요."
+
+    if error_type == "enum":
+        return f"{label}을 목록에서 선택해주세요."
+
+    if error_type == "greater_than_equal":
+        return f"{label}은 {ctx.get('ge')} 이상으로 입력해주세요."
+
+    if error_type == "less_than_equal":
+        return f"{label}은 {ctx.get('le')} 이하로 입력해주세요."
+
+    if error_type == "greater_than":
+        return f"{label}을 올바르게 입력해주세요."
+
+    if error_type == "extra_forbidden":
+        return "지원하지 않는 입력 항목입니다."
+
+    return f"{label}을 다시 확인해주세요."
+
+
 app = FastAPI(
     title="StepHome API",
     description="StepHome Backend API",
@@ -404,23 +486,27 @@ async def validation_exception_handler(
             str(item)
             for item in location
         )
+        label = _field_label(field)
 
         details.append(
             {
-                "field": field,
-                "reason": error.get(
-                    "msg",
-                    "입력값이 올바르지 않습니다.",
-                ),
+                "field": label,
+                "reason": _validation_reason(error, label),
             }
         )
+
+    message = (
+        details[0]["reason"]
+        if len(details) == 1
+        else "입력값을 확인해주세요."
+    )
 
     return JSONResponse(
         status_code=422,
         content={
             "error": {
                 "code": "INVALID_INPUT",
-                "message": "입력값을 확인해주세요.",
+                "message": message,
                 "details": details,
             }
         },
