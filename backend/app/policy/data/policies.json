@@ -4,11 +4,10 @@
     "title": "청년월세 지원사업",
     "description": "청년의 주거비 부담 완화를 위해 월세를 지원하는 사업",
     "policy_category": "RENT_SUPPORT",
-    "policy_region": "NATIONAL",
+    "policy_region": "전국",
     "policy_provider": "국토교통부",
     "application_start": "2026-03-30",
     "application_end": "2026-05-29",
-    "application_period_type": "FIXED",
     "support_amount": 200000,
     "support_amount_unit": "MONTH",
     "support_amount_text": "실제 납부하는 월세 범위에서 월 최대 20만원을 최대 24개월 지원",
@@ -19,16 +18,22 @@
         "min": 19,
         "max": 34
       },
+      "current_region": [],
       "target_region": [
         "NATIONAL"
       ],
       "housing_status": [
         "NO_HOME"
       ],
+      "marital_status": [],
+      "employment_status": [],
       "income": {
         "personal_ratio": null,
-        "household_ratio": 0.6,
+        "youth_household_ratio": 0.6,
         "basis": "MEDIAN_INCOME"
+      },
+      "assets": {
+        "total_assets_max": null
       },
       "housing": {
         "type": [
@@ -37,25 +42,23 @@
         "deposit_max": null,
         "monthly_rent_max": null
       },
-      "employment_status": [],
       "additional_conditions": [
         "LIVE_SEPARATELY_FROM_PARENTS",
         "ORIGINAL_HOUSEHOLD_INCOME_REQUIREMENT"
       ]
     },
-    "source_url": "https://www.bokjiro.go.kr/ssis-tbu/twataa/wlfareInfo/moveTWAT52011M.do?wlfareInfoId=WLF00004129",
-    "checked_at": "2026-08-15 20:36:00"
+    "source_url": "복지로 청년월세 지원사업",
+    "checked_at": "2026-08-15T20:36:00"
   },
   {
     "policy_id": 2,
     "title": "청년전세임대",
     "description": "LH가 기존주택을 전세계약한 뒤 청년에게 저렴하게 재임대하는 사업",
     "policy_category": "PUBLIC_RENTAL",
-    "policy_region": "NATIONAL",
+    "policy_region": "전국",
     "policy_provider": "LH",
     "application_start": null,
     "application_end": null,
-    "application_period_type": "NOTICE_BASED",
     "support_amount": null,
     "support_amount_unit": "OTHER",
     "support_amount_text": "LH가 기존주택을 전세계약 후 입주자에게 재임대하며 임대조건은 입주순위 및 공급주택에 따라 달라짐",
@@ -66,42 +69,48 @@
         "min": 19,
         "max": 39
       },
+      "current_region": [],
       "target_region": [
         "NATIONAL"
       ],
       "housing_status": [
         "NO_HOME"
       ],
+      "marital_status": [
+        "UNMARRIED"
+      ],
+      "employment_status": [],
       "income": {
-        "personal_ratio": 1.0,
-        "household_ratio": null,
-        "basis": "AVERAGE_MONTHLY_INCOME"
+        "personal_ratio": null,
+        "youth_household_ratio": null,
+        "basis": null
+      },
+      "assets": {
+        "total_assets_max": null
       },
       "housing": {
         "type": [],
         "deposit_max": null,
         "monthly_rent_max": null
       },
-      "employment_status": [],
       "additional_conditions": [
-        "UNMARRIED_REQUIREMENT",
         "PRIORITY_REQUIREMENTS",
+        "INCOME_REQUIREMENT_BY_PRIORITY",
         "ASSET_REQUIREMENT"
       ]
     },
     "source_url": "https://apply.lh.or.kr/lhapply/cm/cntnts/cntntsView.do?mi=1240&cntntsId=1040",
-    "checked_at": "2026-08-15 20:36:00"
+    "checked_at": "2026-08-15T20:36:00"
   },
   {
     "policy_id": 3,
     "title": "제주 청년 희망충전 월세 지원",
     "description": "제주 거주 35~39세 청년의 주거비 부담을 줄이기 위한 월세 지원",
     "policy_category": "RENT_SUPPORT",
-    "policy_region": "JEJU",
+    "policy_region": "제주특별자치도",
     "policy_provider": "제주특별자치도 건설주택국 주택토지과",
     "application_start": null,
     "application_end": null,
-    "application_period_type": "NOTICE_BASED",
     "support_amount": 200000,
     "support_amount_unit": "MONTH",
     "support_amount_text": "임차료 월 최대 20만원을 최대 12개월 지원",
@@ -112,16 +121,24 @@
         "min": 35,
         "max": 39
       },
+      "current_region": [
+        "JEJU"
+      ],
       "target_region": [
         "JEJU"
       ],
       "housing_status": [
         "NO_HOME"
       ],
+      "marital_status": [],
+      "employment_status": [],
       "income": {
         "personal_ratio": null,
-        "household_ratio": 0.6,
+        "youth_household_ratio": 0.6,
         "basis": "MEDIAN_INCOME"
+      },
+      "assets": {
+        "total_assets_max": null
       },
       "housing": {
         "type": [
@@ -130,29 +147,26 @@
         "deposit_max": null,
         "monthly_rent_max": null
       },
-      "employment_status": [],
       "additional_conditions": [
-        "CURRENT_RESIDENCE_JEJU",
         "LIVE_SEPARATELY_FROM_PARENTS",
         "HOUSEHOLD_HEAD_REQUIREMENT",
         "ASSET_REQUIREMENT"
       ]
     },
     "source_url": "https://www.bokjiro.go.kr/ssis-tbu/twataa/wlfareInfo/moveTWAT52011M.do?wlfareInfoId=WLF00006076",
-    "checked_at": "2026-08-15 21:58:00"
+    "checked_at": "2026-08-15T21:58:00"
   },
   {
     "policy_id": 4,
     "title": "청년전용 버팀목 전세자금대출",
     "description": "전세자금이 부족한 청년에게 저금리로 전세자금을 대출하는 주거금융 지원",
     "policy_category": "LOAN",
-    "policy_region": "NATIONAL",
+    "policy_region": "전국",
     "policy_provider": "주택도시기금",
     "application_start": null,
     "application_end": null,
-    "application_period_type": "ALWAYS_OPEN",
     "support_amount": 150000000,
-    "support_amount_unit": "ONE_TIME",
+    "support_amount_unit": "TOTAL",
     "support_amount_text": "전세자금 최대 1억 5천만원 대출. 신규계약은 전세금액의 80% 이내이며 실제 대출금액은 심사 결과에 따라 결정",
     "family_earnings": "부부합산 연소득 5천만원 이하",
     "eligibility_text": "만 19~34세, 부부합산 연소득 5천만원 이하, 순자산가액 3.37억원 이하인 무주택세대주 또는 예비세대주. 임차보증금 3억원 이하 주택 대상",
@@ -161,16 +175,22 @@
         "min": 19,
         "max": 34
       },
+      "current_region": [],
       "target_region": [
         "NATIONAL"
       ],
       "housing_status": [
         "NO_HOME"
       ],
+      "marital_status": [],
+      "employment_status": [],
       "income": {
         "personal_ratio": null,
-        "household_ratio": null,
+        "youth_household_ratio": null,
         "basis": null
+      },
+      "assets": {
+        "total_assets_max": null
       },
       "housing": {
         "type": [
@@ -179,7 +199,6 @@
         "deposit_max": 300000000,
         "monthly_rent_max": null
       },
-      "employment_status": [],
       "additional_conditions": [
         "HOUSEHOLD_HEAD_OR_EXPECTED",
         "COUPLE_ANNUAL_INCOME_REQUIREMENT",
@@ -187,18 +206,17 @@
       ]
     },
     "source_url": "https://housing.gg.go.kr/html/24204.do",
-    "checked_at": "2026-08-15 22:40:00"
+    "checked_at": "2026-08-15T22:40:00"
   },
   {
     "policy_id": 5,
     "title": "청년 매입임대",
     "description": "LH가 매입한 주택을 청년에게 시중시세보다 저렴하게 임대하는 주거지원",
     "policy_category": "PUBLIC_RENTAL",
-    "policy_region": "NATIONAL",
+    "policy_region": "전국",
     "policy_provider": "LH",
     "application_start": null,
     "application_end": null,
-    "application_period_type": "NOTICE_BASED",
     "support_amount": null,
     "support_amount_unit": "OTHER",
     "support_amount_text": "LH가 매입한 주택을 시중시세의 40~50% 수준으로 임대",
@@ -209,30 +227,91 @@
         "min": 19,
         "max": 39
       },
+      "current_region": [],
       "target_region": [
         "NATIONAL"
       ],
       "housing_status": [
         "NO_HOME"
       ],
+      "marital_status": [
+        "UNMARRIED"
+      ],
+      "employment_status": [],
       "income": {
-        "personal_ratio": 1.0,
-        "household_ratio": null,
-        "basis": "AVERAGE_MONTHLY_INCOME"
+        "personal_ratio": null,
+        "youth_household_ratio": null,
+        "basis": null
+      },
+      "assets": {
+        "total_assets_max": null
       },
       "housing": {
         "type": [],
         "deposit_max": null,
         "monthly_rent_max": null
       },
-      "employment_status": [],
       "additional_conditions": [
-        "UNMARRIED_REQUIREMENT",
         "PRIORITY_REQUIREMENTS",
+        "INCOME_REQUIREMENT_BY_PRIORITY",
         "ASSET_REQUIREMENT"
       ]
     },
     "source_url": "https://apply.lh.or.kr/lhapply/cm/cntnts/cntntsView.do?cntntsId=201251&mi=1150",
-    "checked_at": "2026-08-16 00:00:00"
+    "checked_at": "2026-08-16"
+  },
+  {
+    "policy_id": 6,
+    "title": "서울시 청년월세지원",
+    "description": "서울에 거주하는 청년의 주거비 부담 완화와 안정적 주거환경 마련을 위해 월세를 지원하는 사업",
+    "policy_category": "RENT_SUPPORT",
+    "policy_region": "서울특별시",
+    "policy_provider": "서울특별시",
+    "application_start": "2026-05-06",
+    "application_end": "2026-05-19",
+    "support_amount": 200000,
+    "support_amount_unit": "MONTH",
+    "support_amount_text": "월 최대 20만원의 임차료를 최대 12개월 지원하며 생애 1회 지원",
+    "family_earnings": "가구당 기준 중위소득 48% 초과 ~ 150% 이하",
+    "eligibility_text": "신청일 기준 서울시에 거주하는 19~39세 무주택 청년으로, 임차보증금 8천만원 이하 및 월세 60만원 이하 건물에 월세로 거주하며 가구당 기준 중위소득 48% 초과 ~ 150% 이하여야 함. 월세가 60만원을 초과하는 경우 보증금 월세환산액과 월세액의 합계가 90만원 이하이면 신청 가능",
+    "eligibility_rules": {
+      "age": {
+        "min": 19,
+        "max": 39
+      },
+      "current_region": [
+        "SEOUL"
+      ],
+      "target_region": [
+        "SEOUL"
+      ],
+      "housing_status": [
+        "NO_HOME"
+      ],
+      "marital_status": [],
+      "employment_status": [],
+      "income": {
+        "personal_ratio": null,
+        "youth_household_ratio": 1.5,
+        "basis": "MEDIAN_INCOME"
+      },
+      "assets": {
+        "total_assets_max": null
+      },
+      "housing": {
+        "type": [
+          "MONTHLY_RENT"
+        ],
+        "deposit_max": 80000000,
+        "monthly_rent_max": 600000
+      },
+      "additional_conditions": [
+        "INCOME_OVER_48_PERCENT_REQUIREMENT",
+        "REGISTERED_AT_RENTAL_ADDRESS",
+        "DUPLICATE_RENT_SUPPORT_RESTRICTION"
+      ]
+    },
+    "source_url": "서울주거포털 청년월세지원",
+    "checked_at": "2026-08-16"
   }
 ]
