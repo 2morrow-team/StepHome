@@ -1,17 +1,21 @@
 {
   "user": {
-    "age": 24,
-    "region": "경기도",
+    "age": 25,
+    "current_region": "SEOUL",
     "employment_status": "EMPLOYED",
-    "monthly_income": 2500000,
-    "monthly_saving": 500000,
-    "current_savings": 5000000,
-    "current_emergency_fund": 1000000
+    "personal_monthly_income": 2500000,
+    "total_assets": 30000000,
+    "monthly_savings": 500000,
+    "housing_status": "NO_HOME",
+    "youth_household_monthly_income": 2500000,
+    "youth_household_size": 1,
+    "marital_status": "UNMARRIED"
   },
   "target": {
-    "target_date": "2027-01-12",
-    "monthly_rent_budget": 500000,
-    "deposit_budget": 5000000,
-    "housing_type": "MONTHLY_RENT"
+    "planned_move_in_date": "2027-03-01",
+    "desired_deposit": 90000000,
+    "desired_monthly_rent": 500000,
+    "desired_housing_type": "MONTHLY_RENT",
+    "desired_region": "SEOUL"
   }
 }
