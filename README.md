@@ -159,15 +159,16 @@ Frontend
 | Language | Python 3.12 | Backend 전체 개발 언어 |
 | Framework | FastAPI | REST API 구현 및 Frontend·Policy·AI 연결 |
 | Data Validation | Pydantic | Request / Response JSON Schema 및 입력값 검증 |
-| ORM | SQLAlchemy | Python 객체와 DB 테이블 연결 및 데이터 처리 |
-| Local Database | SQLite | MVP 로컬 개발 및 데이터 저장 |
+| Persistence | InMemoryDatabase | MVP 데모용 계획 저장 및 Re-planning 조회 |
+| ORM / DB | SQLAlchemy / SQLite | 배포·영속 저장 확장 시 도입 예정 |
 | Server | Uvicorn | FastAPI 애플리케이션 실행 |
 | HTTP Client | httpx | 외부 API 및 필요 시 서비스 간 HTTP 통신 |
 | Environment | python-dotenv | `.env` 기반 API Key·DB 설정 등 환경변수 관리 |
 | Package Manager | pip + requirements.txt | Python 패키지 및 의존성 관리 |
 | API Docs / Test | FastAPI Swagger | `/docs`에서 API 명세 확인 및 직접 요청 테스트 |
 
-DB는 우선 SQLite로 MVP를 구현한 뒤 배포 환경에 따라 PostgreSQL 등의 도입
+현재 MVP는 FastAPI 프로세스 안의 InMemoryDatabase로 계획을 저장합니다.
+서버를 재시작하면 생성된 계획은 초기화되며, 배포 환경에서는 SQLite/PostgreSQL 등 영속 저장소로 확장할 수 있습니다.
 
 ### Policy / Rule Engine
 
@@ -223,7 +224,6 @@ DB는 우선 SQLite로 MVP를 구현한 뒤 배포 환경에 따라 PostgreSQL �
 │   ├── diagnosis-rules.md
 │   ├── mock-contract.md
 │   ├── mvp-scope.md
-│   ├── open-decisions.md
 │   └── user-flow.md
 │
 └── README.md
@@ -375,6 +375,20 @@ http://localhost:8000/api/v1/health
 > `localhost:8000`은 각 개발자의 로컬 환경에서 실행되는 Backend 주소입니다.  
 > 다른 팀원도 Backend 코드를 받은 뒤 위 과정을 통해 자신의 컴퓨터에서 동일하게 실행할 수 있습니다.
 
+#### 7. AI 환경변수 및 Fallback
+
+AI Action Plan을 실제 OpenAI API로 생성하려면 프로젝트 루트의 `.env`에 다음 값을 설정합니다.
+
+```text
+OPENAI_API_KEY=<OpenAI Project API Key>
+OPENAI_MODEL=gpt-5.6-terra
+OPENAI_REASONING_EFFORT=low
+AI_FALLBACK_ENABLED=true
+```
+
+`OPENAI_API_KEY`가 없거나 API 호출이 실패하면 기본 설정에서는 fallback Action Plan을 사용해 `/api/v1/plan` 데모 흐름을 계속 확인할 수 있습니다.
+실제 LLM 생성 결과를 검증하려면 `.env.example`을 참고해 API Key를 설정하고, API Key는 Git에 커밋하지 않습니다.
+
 #### Production
 
 배포 이후 실제 Backend URL을 추가합니다.
@@ -489,7 +503,6 @@ docs/
 ├── diagnosis-rules.md
 ├── mock-contract.md
 ├── mvp-scope.md
-├── open-decisions.md
 └── user-flow.md
 ```
 

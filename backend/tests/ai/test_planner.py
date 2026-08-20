@@ -128,10 +128,9 @@ def test_plan_uses_safe_fallback_when_api_is_unavailable(monkeypatch):
 
     result = planner.generate_action_plan(ai_input)
 
-    assert [action["action_type"] for action in result["actions"]] == [
-        "SAVING",
-        "CONTRACT",
-    ]
+    assert {action["phase"] for action in result["actions"]} == {1, 2, 3, 4}
+    assert any(action["action_type"] == "SAVING" for action in result["actions"])
+    assert any(action["action_type"] == "CONTRACT" for action in result["actions"])
 
 
 def test_disabled_fallback_returns_ai_planner_error(monkeypatch):

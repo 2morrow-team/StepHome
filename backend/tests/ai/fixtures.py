@@ -151,7 +151,7 @@ AI_INPUT = {
 }
 
 VALID_ACTION_PLAN = {
-    "summary": "현재 저축 계획을 유지하면서 이용 가능한 정책을 활용하세요.",
+    "summary": "현재 저축 계획을 유지하면서 정책 신청, 공고 모니터링, 계약 안전 확인을 단계별로 실행하세요.",
     "actions": [
         {
             "phase": 1,
@@ -165,14 +165,36 @@ VALID_ACTION_PLAN = {
             "due_date": None,
         },
         {
-            "phase": 1,
+            "phase": 2,
             "priority": 2,
             "action_type": "POLICY",
-            "timing": "NOW",
+            "timing": "PREPARE",
             "title": "청년월세 지원사업 신청 준비",
             "description": "신청기간과 필요서류를 확인합니다.",
             "reason": "현재 이용 가능한 정책입니다.",
             "policy_id": 1,
+            "due_date": None,
+        },
+        {
+            "phase": 3,
+            "priority": 3,
+            "action_type": "POLICY",
+            "timing": "PREPARE",
+            "title": "정책 공고 확인",
+            "description": "입주 전까지 청년월세 지원사업의 다음 모집공고와 접수 일정을 확인합니다.",
+            "reason": "정책 접수 일정은 변동될 수 있어 중기 점검이 필요합니다.",
+            "policy_id": 1,
+            "due_date": None,
+        },
+        {
+            "phase": 4,
+            "priority": 4,
+            "action_type": "CONTRACT",
+            "timing": "BEFORE_CONTRACT",
+            "title": "계약 안전 확인",
+            "description": "계약 전 등기부등본과 보증보험 가입 가능 여부를 확인합니다.",
+            "reason": "입주 직전 보증금 손실 위험을 줄이기 위한 필수 절차입니다.",
+            "policy_id": None,
             "due_date": None,
         },
     ],

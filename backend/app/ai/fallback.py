@@ -56,6 +56,67 @@ _BASIS_PHASE: dict[str, int] = {
     CandidateBasis.INFORMATION_NOTICE: 2,
     CandidateBasis.CONTRACT_CHECK: 4,
 }
+_REQUIRED_PHASES = {1, 2, 3, 4}
+
+
+def _candidate_for_phase(candidates: list[ActionCandidate], phase: int) -> ActionCandidate:
+    preferred_action_types = {
+        1: ("SAVING", "POLICY"),
+        2: ("POLICY", "HOUSING", "SAVING"),
+        3: ("HOUSING", "POLICY", "SAVING"),
+        4: ("CONTRACT", "HOUSING", "SAVING"),
+    }
+    for action_type in preferred_action_types[phase]:
+        for candidate in candidates:
+            if candidate.action_type == action_type:
+                return candidate
+    return candidates[0]
+
+
+def _phase_fill_action(
+    candidate: ActionCandidate,
+    phase: int,
+    priority: int,
+) -> dict[str, Any]:
+    policy_title = candidate.context.get("title") or "정책"
+    common = {
+        "phase": phase,
+        "priority": priority,
+        "action_type": candidate.action_type,
+        "policy_id": candidate.policy_id,
+        "due_date": None,
+    }
+    if phase == 1:
+        return {
+            **common,
+            "timing": "NOW",
+            "title": "즉시 실행 점검",
+            "description": "이번 주 안에 월 저축액, 신청 가능한 정책, 현재 부족 조건을 한 번에 확인하세요.",
+            "reason": "독립 준비 초반에는 바로 실행할 항목을 먼저 정리해야 합니다.",
+        }
+    if phase == 2:
+        return {
+            **common,
+            "timing": "PREPARE",
+            "title": "서류 조건 정리",
+            "description": f"{policy_title} 관련 필요서류와 미충족 조건을 정리하고 보완 일정을 잡으세요.",
+            "reason": "단기 준비 단계에서는 신청 가능성을 높이기 위한 조건 확인이 필요합니다.",
+        }
+    if phase == 3:
+        return {
+            **common,
+            "timing": "SEARCH_HOUSE",
+            "title": "주거 후보 탐색",
+            "description": "희망 지역의 보증금·월세 범위에 맞는 매물을 비교하고 정책 공고 변동을 함께 확인하세요.",
+            "reason": "입주 수개월 전에는 실제 주거 선택지와 정책 일정을 함께 좁혀야 합니다.",
+        }
+    return {
+        **common,
+        "timing": "BEFORE_CONTRACT",
+        "title": "입주 전 최종점검",
+        "description": "계약 전 등기부등본, 선순위 권리, 보증보험 가입 가능 여부와 이사 일정을 최종 확인하세요.",
+        "reason": "입주 직전에는 계약 안전과 이사 실행 준비가 가장 중요합니다.",
+    }
 
 
 def _candidate_action(candidate: ActionCandidate, priority: int) -> dict[str, Any]:
@@ -188,6 +249,13 @@ def build_fallback_action_plan(
         _candidate_action(candidate, priority)
         for priority, candidate in enumerate(candidates, start=1)
     ]
+    used_phases = {action["phase"] for action in actions}
+    for phase in sorted(_REQUIRED_PHASES - used_phases):
+        candidate = _candidate_for_phase(candidates, phase)
+        actions.append(_phase_fill_action(candidate, phase, len(actions) + 1))
+    actions.sort(key=lambda action: (action["phase"], action["priority"]))
+    for priority, action in enumerate(actions, start=1):
+        action["priority"] = priority
     summary = (
         _replan_summary(replan_input)
         if replan_input is not None

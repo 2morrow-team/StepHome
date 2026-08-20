@@ -11,9 +11,13 @@
 ```text
 2morrow/
 ├── frontend/       # Frontend
-├── backend/        # Backend
-├── policy/         # Policy Data / Rule Engine
-├── ai/             # AI Action Plan
+├── backend/        # Backend / Diagnosis / Policy / AI
+│   └── app/
+│       ├── diagnosis/  # Diagnosis Calculator
+│       ├── policy/     # Policy Data / Rule Engine
+│       ├── ai/         # AI Action Plan
+│       ├── services/   # Use Case Orchestration
+│       └── routers/    # FastAPI Routers
 ├── mock/           # 공통 Mock Data
 ├── docs/           # API / Schema / 개발 문서
 ├── README.md

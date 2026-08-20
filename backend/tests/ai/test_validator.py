@@ -136,7 +136,7 @@ class TestPhaseValidation:
     @pytest.mark.parametrize("phase", [1, 2, 3, 4])
     def test_valid_phase_passes(self, phase):
         plan = copy.deepcopy(VALID_ACTION_PLAN)
-        plan["actions"][0]["phase"] = phase
+        plan["actions"][phase - 1]["phase"] = phase
         validate_action_plan(plan)  # should not raise
 
     def test_phase_zero_raises(self):
@@ -157,10 +157,17 @@ class TestPhaseValidation:
         with pytest.raises(ValueError, match="phase"):
             validate_action_plan(plan)
 
-    def test_missing_phase_passes(self):
+    def test_missing_phase_raises(self):
         plan = copy.deepcopy(VALID_ACTION_PLAN)
         del plan["actions"][0]["phase"]
-        validate_action_plan(plan)  # phase는 선택 필드, 없어도 통과
+        with pytest.raises(ValueError, match="phase"):
+            validate_action_plan(plan)
+
+    def test_missing_phase_coverage_raises(self):
+        plan = copy.deepcopy(VALID_ACTION_PLAN)
+        plan["actions"][2]["phase"] = 2
+        with pytest.raises(ValueError, match="Phase 1~4"):
+            validate_action_plan(plan)
 
 
 class TestHallucinationPrevention:
@@ -206,9 +213,15 @@ class TestHallucinationPrevention:
 
     def test_all_candidates_are_required_when_enabled(self):
         candidates = generate_candidates(DIAGNOSIS, [], monthly_saving=500000)
+        saving = copy.deepcopy(VALID_ACTION_PLAN["actions"][0])
         plan = {
             "summary": "저축 계획을 조정하세요.",
-            "actions": [copy.deepcopy(VALID_ACTION_PLAN["actions"][0])],
+            "actions": [
+                {**copy.deepcopy(saving), "phase": 1, "priority": 1},
+                {**copy.deepcopy(saving), "phase": 2, "priority": 2},
+                {**copy.deepcopy(saving), "phase": 3, "priority": 3},
+                {**copy.deepcopy(saving), "phase": 4, "priority": 4},
+            ],
         }
 
         with pytest.raises(ValueError, match="생성되지 않은"):

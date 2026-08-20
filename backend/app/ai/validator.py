@@ -11,6 +11,7 @@ _BACKEND_FIELDS = {
     "status",
     "created_at",
 }
+_REQUIRED_PHASES = {1, 2, 3, 4}
 
 
 def validate_action_plan(
@@ -29,15 +30,11 @@ def validate_action_plan(
         raise ValueError("AI ActionPlan에는 최소 1개의 Action이 필요합니다.")
 
     allowed_candidates = None
-    candidate_by_key = {}
     if candidates is not None:
         allowed_candidates = {(candidate.action_type, candidate.policy_id) for candidate in candidates}
-        candidate_by_key = {
-            (candidate.action_type, candidate.policy_id): candidate
-            for candidate in candidates
-        }
 
     used_candidates: set[tuple[str, Optional[int]]] = set()
+    used_phases: set[int] = set()
     for action in actions:
         if not isinstance(action, dict):
             raise ValueError("AI Action 구조가 올바르지 않습니다.")
@@ -65,8 +62,9 @@ def validate_action_plan(
                 raise ValueError(f"존재하지 않는 policy_id가 포함되어 있습니다: {policy_id}")
 
         phase = action.get("phase")
-        if phase is not None and (not isinstance(phase, int) or not (1 <= phase <= 4)):
+        if not isinstance(phase, int) or phase not in _REQUIRED_PHASES:
             raise ValueError(f"phase는 1~4 사이 정수여야 합니다: {phase}")
+        used_phases.add(phase)
 
         if allowed_candidates is not None:
             candidate_key = (action["action_type"], policy_id)
@@ -75,19 +73,22 @@ def validate_action_plan(
                     "허용되지 않은 Action 후보입니다: "
                     f"action_type={action['action_type']}, policy_id={policy_id}"
                 )
-            if candidate_key in used_candidates:
-                raise ValueError(
-                    "동일한 Action 후보가 중복 생성되었습니다: "
-                    f"action_type={action['action_type']}, policy_id={policy_id}"
-                )
             used_candidates.add(candidate_key)
 
     priorities = [action["priority"] for action in actions]
     if priorities != list(range(1, len(actions) + 1)):
         raise ValueError("priority는 1부터 중복 없이 순서대로 지정해야 합니다.")
 
-    if require_all_candidates and allowed_candidates != used_candidates:
+    missing_phases = _REQUIRED_PHASES - used_phases
+    if missing_phases:
+        raise ValueError(
+            "ActionPlan에는 Phase 1~4 각각 최소 1개 Action이 필요합니다: "
+            f"missing_phase={sorted(missing_phases)}"
+        )
+
+    if require_all_candidates and allowed_candidates is not None:
         missing_candidates = allowed_candidates - used_candidates
-        raise ValueError(f"생성되지 않은 Action 후보가 있습니다: {missing_candidates}")
+        if missing_candidates:
+            raise ValueError(f"생성되지 않은 Action 후보가 있습니다: {missing_candidates}")
 
     return action_plan

@@ -88,6 +88,13 @@ Action 생성 규칙:
   - Phase 2 (단기): 수개월 내 준비해야 하는 것 (서류 수집, 조건 확인)
   - Phase 3 (중기): 입주 수개월 전 준비 (주거 탐색, 정책 모니터링)
   - Phase 4 (입주 직전): 계약·이사·보증보험 등 입주 직전 처리
+- Phase별 목표와 Action은 반드시 서로 달라야 함:
+  - Phase 1은 즉시 실행할 재정·신청 착수 목표
+  - Phase 2는 단기 보완·서류·조건 확인 목표
+  - Phase 3은 중기 주거 탐색·정책 모니터링 목표
+  - Phase 4는 입주 직전 계약·이사 안전 목표
+- 빈 phase 금지: Phase 1, 2, 3, 4 각각에 최소 1개 이상의 Action을 반드시 생성
+- 특정 phase에 후보가 몰리더라도 유사한 제목·description을 반복하지 말고, phase 목적에 맞게 실행 목표를 분리
 - description은 반드시 구체적으로 작성:
   예) "주민등록등본·건강보험료납부확인서를 정부24(gov.kr)에서 발급하세요." (O)
       "서류를 준비하세요." (X)
@@ -101,7 +108,7 @@ Action 생성 규칙:
 - 허용된 action_type: SAVING, POLICY, HOUSING, CONTRACT
 - 허용된 timing: NOW, PREPARE, SEARCH_HOUSE, BEFORE_CONTRACT
 - due_date는 반드시 null로 설정 (시스템이 phase 기준으로 자동 주입)
-- 제시된 모든 Action 후보를 각각 정확히 1개 Action으로 생성
+- 제시된 모든 Action 후보를 각각 최소 1개 Action에 반드시 반영
 - priority는 1부터 순서대로"""
 
 
