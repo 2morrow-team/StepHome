@@ -530,6 +530,19 @@ function PlanDashboard({ plan }: { plan: PlanResponse }) {
   const completedActionIds = storedCompletedActionIds ?? plan.action_plan.actions.filter((action) => action.status === 'DONE').map((action) => action.action_id)
   const completedIds = useMemo(() => new Set(completedActionIds), [completedActionIds])
 
+  const isPhaseComplete = (phase: Phase) => {
+    const phaseActions = actions.filter((item) => item.phase === phase)
+    return phaseActions.length > 0 && phaseActions.every((item) => completedIds.has(item.action.action_id))
+  }
+
+  const isPhaseUnlocked = (phase: Phase) => {
+    if (phase === 1) return true
+    for (let p = 1; p < phase; p++) {
+      if (!isPhaseComplete(p as Phase)) return false
+    }
+    return true
+  }
+
   const visibleActions = actions.filter((item) => item.phase === selectedPhase)
   const fallbackActions = visibleActions.length > 0 ? visibleActions : actions.slice(0, 2)
 
@@ -558,30 +571,51 @@ function PlanDashboard({ plan }: { plan: PlanResponse }) {
         <section className="min-w-0 rounded-card border border-border-subtle bg-background-surface p-6">
           <h2 className="type-title text-text-primary">독립 준비 로드맵</h2>
           <div className="mt-4 flex flex-wrap gap-2">
-            {[1, 2, 3, 4].map((phase) => (
-              <button
-                key={phase}
-                type="button"
-                className={`rounded-pill px-3 py-2 type-caption ${selectedPhase === phase ? 'bg-action-subtle text-action-primary' : 'bg-background-surface-subtle text-text-secondary'}`}
-                onClick={() => setSelectedPhase(phase as Phase)}
-              >
-                Phase {phase}
-              </button>
-            ))}
+            {[1, 2, 3, 4].map((phase) => {
+              const unlocked = isPhaseUnlocked(phase as Phase)
+              const complete = isPhaseComplete(phase as Phase)
+              return (
+                <button
+                  key={phase}
+                  type="button"
+                  disabled={!unlocked}
+                  className={`flex items-center gap-1 rounded-pill px-3 py-2 type-caption transition-opacity ${
+                    !unlocked
+                      ? 'cursor-not-allowed opacity-40 bg-background-surface-subtle text-text-secondary'
+                      : selectedPhase === phase
+                      ? 'bg-action-subtle text-action-primary'
+                      : complete
+                      ? 'bg-status-success-background text-status-success'
+                      : 'bg-background-surface-subtle text-text-secondary'
+                  }`}
+                  onClick={() => unlocked && setSelectedPhase(phase as Phase)}
+                >
+                  {!unlocked ? '🔒' : complete ? '✓' : null}
+                  Phase {phase}
+                </button>
+              )
+            })}
           </div>
-          <p className="mt-4 type-caption text-text-secondary">~ {formatDate(phaseEndDates[selectedPhase])}</p>
+          {!isPhaseUnlocked(selectedPhase) && (
+            <p className="mt-3 type-caption text-status-danger">이전 단계를 모두 완료해야 다음 단계로 넘어갈 수 있어요.</p>
+          )}
+          <p className="mt-2 type-caption text-text-secondary">~ {formatDate(phaseEndDates[selectedPhase])}</p>
           <div className="mt-4 grid gap-4">
-            {fallbackActions.map(({ action, dueDate }) => (
-              <ActionItem
-                key={action.action_id}
-                status={completedIds.has(action.action_id) ? 'complete' : 'incomplete'}
-                actionName={action.title}
-                description={`${action.description}${dueDate ? ` · 기한 ${formatDate(dueDate)}` : ''}`}
-                reason={action.reason}
-                aria-label={`${action.title} 완료 상태 변경`}
-                onStatusChange={(status) => handleStatusChange(action.action_id, status)}
-              />
-            ))}
+            {fallbackActions.map(({ action, dueDate }) => {
+              const locked = !isPhaseUnlocked(action.phase as Phase)
+              return (
+                <ActionItem
+                  key={action.action_id}
+                  status={completedIds.has(action.action_id) ? 'complete' : 'incomplete'}
+                  actionName={action.title}
+                  description={`${action.description}${dueDate ? ` · 기한 ${formatDate(dueDate)}` : ''}`}
+                  reason={action.reason}
+                  aria-label={`${action.title} 완료 상태 변경`}
+                  disabled={locked}
+                  onStatusChange={locked ? undefined : (status) => handleStatusChange(action.action_id, status)}
+                />
+              )
+            })}
           </div>
         </section>
         <section className="min-w-0 overflow-hidden rounded-card border border-border-subtle bg-background-surface p-6">
