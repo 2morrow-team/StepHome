@@ -108,35 +108,50 @@ def _generate_and_validate(
     candidates: list,
     replan_input: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
-    try:
-        result = _call_llm(system_prompt, user_prompt)
-        return validate_action_plan(
-            result,
-            candidates=candidates,
-            require_all_candidates=True,
-        )
-    except (OpenAIError, RuntimeError, ValueError) as exc:
-        if not _fallback_enabled():
-            raise AIPlannerError("AI Action Plan 생성에 실패했습니다.") from exc
+    max_attempts = int(os.getenv("AI_MAX_ATTEMPTS", "2"))
+    last_exc: Exception = RuntimeError("AI 호출 시도 없음")
 
-        logger.warning(
-            "AI Action Plan fallback 사용 reason=%s",
-            type(exc).__name__,
-        )
-        fallback = build_fallback_action_plan(
-            candidates,
-            replan_input=replan_input,
-        )
+    for attempt in range(1, max_attempts + 1):
         try:
+            result = _call_llm(system_prompt, user_prompt)
             return validate_action_plan(
-                fallback,
+                result,
                 candidates=candidates,
                 require_all_candidates=True,
             )
-        except ValueError as fallback_exc:
-            raise AIPlannerError(
-                "AI Action Plan과 안전 fallback 생성에 실패했습니다."
-            ) from fallback_exc
+        except ValueError as exc:
+            last_exc = exc
+            logger.warning(
+                "AI Action Plan 검증 실패 attempt=%d/%d reason=%s",
+                attempt,
+                max_attempts,
+                exc,
+            )
+        except (OpenAIError, RuntimeError) as exc:
+            last_exc = exc
+            logger.warning(
+                "AI Action Plan 호출 실패 attempt=%d/%d reason=%s",
+                attempt,
+                max_attempts,
+                type(exc).__name__,
+            )
+            break  # OpenAI 클라이언트가 이미 내부 재시도를 처리하므로 즉시 중단
+
+    if not _fallback_enabled():
+        raise AIPlannerError("AI Action Plan 생성에 실패했습니다.") from last_exc
+
+    logger.warning("AI Action Plan fallback 사용 reason=%s", type(last_exc).__name__)
+    fallback = build_fallback_action_plan(candidates, replan_input=replan_input)
+    try:
+        return validate_action_plan(
+            fallback,
+            candidates=candidates,
+            require_all_candidates=True,
+        )
+    except ValueError as fallback_exc:
+        raise AIPlannerError(
+            "AI Action Plan과 안전 fallback 생성에 실패했습니다."
+        ) from fallback_exc
 
 
 def generate_action_plan(ai_input: dict[str, Any]) -> dict[str, Any]:
