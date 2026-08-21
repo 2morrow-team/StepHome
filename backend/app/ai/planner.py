@@ -65,7 +65,11 @@ def _call_llm(system_prompt: str, user_prompt: str) -> dict[str, Any]:
 
 def _calc_phase_deadlines(move_in_date: date, today: Optional[date] = None) -> dict[int, str]:
     today = today or date.today()
-    total_days = max((move_in_date - today).days, 0)
+    total_days = (move_in_date - today).days
+    if total_days <= 0:
+        # 입주 예정일이 과거이면 오늘부터 90일 기준으로 phase 분배
+        total_days = 90
+        move_in_date = today + timedelta(days=90)
     return {
         1: str(today + timedelta(days=total_days // 4)),
         2: str(today + timedelta(days=total_days // 2)),

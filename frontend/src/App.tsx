@@ -242,8 +242,24 @@ function getActionDueDate(action: Action, phase: Phase, phaseEndDates: Record<Ph
   return action.due_date ?? phaseEndDates[phase]
 }
 
+function isApplicationClosed(policy: PlanSnapshot['matched_policies'][number]) {
+  if (policy.application_period_type !== 'FIXED' || !policy.application_end) return false
+  return new Date(policy.application_end) < new Date()
+}
+
+function getPolicyBadgeStatus(policy: PlanSnapshot['matched_policies'][number]): StatusBadgeProps['status'] {
+  if (policy.eligibility_status === 'AVAILABLE' && isApplicationClosed(policy)) return 'unavailable'
+  return POLICY_BADGE_STATUS[policy.eligibility_status]
+}
+
+function getPolicyStatusLabel(policy: PlanSnapshot['matched_policies'][number]): string {
+  if (policy.eligibility_status === 'AVAILABLE' && isApplicationClosed(policy)) return '모집 마감'
+  return STATUS_LABELS[policy.eligibility_status]
+}
+
 function getPolicyDescription(policy: PlanSnapshot['matched_policies'][number]) {
   if (policy.eligibility_status === 'AVAILABLE') {
+    if (isApplicationClosed(policy)) return `모집이 마감되었습니다. 다음 공고를 확인해보세요.`
     return policy.support_amount_text || policy.description || '받을 수 있는 지원을 확인해보세요.'
   }
   if (policy.eligibility_status === 'CONDITIONAL') return policy.eligibility_text || '충족해야 하는 조건을 확인해보세요.'
@@ -492,7 +508,7 @@ function InputStepTwo({
       <StepPills activeStep={2} />
       <FormCard title="독립 희망 조건" description="목표 조건을 입력하면 필요한 자금과 월 주거비 부담을 함께 계산합니다.">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <TextInputField label="독립 예정일" helper="목표 입주 시점을 선택해주세요." type="date" value={draft.planned_move_in_date} onChange={(value) => setDraft({ planned_move_in_date: value })} />
+          <TextInputField label="독립 예정일" helper="목표 입주 시점을 선택해주세요." type="date" min={toIsoDate(new Date())} value={draft.planned_move_in_date} onChange={(value) => setDraft({ planned_move_in_date: value })} />
           <SelectInputField label="희망 거주 지역" helper="시·도 기준으로 선택해주세요." value={draft.desired_region} options={REGION_OPTIONS} onChange={(value) => setDraft({ desired_region: value })} />
           <TextInputField label="희망 보증금" helper="감당 가능한 보증금 범위를 입력해주세요." type="number" min={0} value={draft.desired_deposit} placeholder="예: 10,000,000원" onChange={(value) => updateNumber('desired_deposit', value)} />
           <TextInputField label="희망 월세" helper="관리비를 제외한 월세를 입력해주세요." type="number" min={0} value={draft.desired_monthly_rent} placeholder="예: 600,000원" onChange={(value) => updateNumber('desired_monthly_rent', value)} />
@@ -679,8 +695,8 @@ function PlanDashboard({ plan }: { plan: PlanResponse }) {
               <PolicyCard
                 key={policy.policy_id}
                 title={policy.title}
-                status={POLICY_BADGE_STATUS[policy.eligibility_status]}
-                statusLabel={STATUS_LABELS[policy.eligibility_status]}
+                status={getPolicyBadgeStatus(policy)}
+                statusLabel={getPolicyStatusLabel(policy)}
                 description={getPolicyDescription(policy)}
                 href={policy.source_url}
               />
