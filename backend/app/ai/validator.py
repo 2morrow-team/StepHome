@@ -52,6 +52,19 @@ def validate_action_plan(
         if not action.get("title") or not action.get("description") or not action.get("reason"):
             raise ValueError("Action 필수 설명이 누락되었습니다.")
 
+        if len(action["description"]) < 15:
+            raise ValueError(f"Action description이 너무 짧습니다: '{action['description']}'")
+        if len(action["reason"]) < 10:
+            raise ValueError(f"Action reason이 너무 짧습니다: '{action['reason']}'")
+
+        for field in ("description", "reason"):
+            text = action[field]
+            banned = ["AVAILABLE", "CONDITIONAL", "NEED_MORE_INFO", "NOT_ELIGIBLE",
+                      "saving_score", "fund_score", "readiness_score"]
+            for word in banned:
+                if word in text:
+                    raise ValueError(f"Action {field}에 내부 코드값이 포함되어 있습니다: '{word}'")
+
         if not isinstance(action.get("priority"), int) or action["priority"] < 1:
             raise ValueError("priority는 1 이상의 정수여야 합니다.")
 
