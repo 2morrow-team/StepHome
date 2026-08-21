@@ -64,7 +64,7 @@ Backend에서 계산한 Diagnosis 결과와 Rule Engine이 판정한 Policy 결�
 _OUTPUT_FORMAT = """\
 아래 JSON 형식으로만 응답:
 {
-  "summary": "사용자 상황 전체를 1~2문장으로 요약",
+  "summary": "보증금 갭·월 저축액·입주 예정일 등 구체적 수치를 포함해 사용자 상황을 1~2문장으로 요약",
   "actions": [
     {
       "phase": 1,
@@ -109,7 +109,10 @@ Action 생성 규칙:
 - 허용된 timing: NOW, PREPARE, SEARCH_HOUSE, BEFORE_CONTRACT
 - due_date는 반드시 null로 설정 (시스템이 phase 기준으로 자동 주입)
 - 제시된 모든 Action 후보를 각각 최소 1개 Action에 반드시 반영
-- priority는 1부터 순서대로"""
+- priority는 1부터 순서대로
+- reason과 description은 반드시 사용자가 읽기 쉬운 한국어로만 작성
+- saving_score, fund_score, readiness_score 등 내부 필드명 사용 금지
+- CONDITIONAL, AVAILABLE, NEED_MORE_INFO 등 영어 코드값 사용 금지 → "신청 가능", "조건 충족 시 신청 가능", "추가 확인 필요" 등 한국어로 표현"""
 
 
 def _format_phase_schedule(phase_deadlines: dict[int, str]) -> str:
