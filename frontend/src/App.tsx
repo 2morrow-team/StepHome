@@ -518,7 +518,7 @@ function PlanDashboard({ plan }: { plan: PlanResponse }) {
     const phase = getActionPhase(action, index)
     return { action, phase, dueDate: getActionDueDate(action, phase, phaseEndDates) }
   })
-  const [selectedPhase, setSelectedPhase] = useState<Phase>(getReadinessPhase(plan.diagnosis.readiness_score))
+  const [selectedPhase, setSelectedPhase] = useState<Phase>(1)
   const ensurePlanProgress = useRoadmapProgressStore((state) => state.ensurePlanProgress)
   const setActionCompleted = useRoadmapProgressStore((state) => state.setActionCompleted)
   const storedCompletedActionIds = useRoadmapProgressStore((state) => state.completedActionIdsByPlan[String(plan.plan_id)])
@@ -532,7 +532,7 @@ function PlanDashboard({ plan }: { plan: PlanResponse }) {
 
   const isPhaseComplete = (phase: Phase) => {
     const phaseActions = actions.filter((item) => item.phase === phase)
-    return phaseActions.length > 0 && phaseActions.every((item) => completedIds.has(item.action.action_id))
+    return phaseActions.length === 0 || phaseActions.every((item) => completedIds.has(item.action.action_id))
   }
 
   const isPhaseUnlocked = (phase: Phase) => {
