@@ -20,6 +20,23 @@ _STATUS_LABELS = {
     "NOT_ELIGIBLE": "현재 대상 아님",
 }
 
+_CONDITION_LABELS = {
+    "AGE": "나이 조건",
+    "CURRENT_REGION": "현재 거주 지역 조건",
+    "HOUSING_STATUS": "무주택 조건",
+    "MARITAL_STATUS": "혼인 상태 조건",
+    "EMPLOYMENT_STATUS": "재직 상태 조건",
+    "PERSONAL_INCOME": "개인 소득 조건",
+    "YOUTH_HOUSEHOLD_INCOME": "청년 가구 소득 조건",
+    "TOTAL_ASSETS": "총자산 조건",
+    "TARGET_REGION": "희망 지역 조건",
+    "HOUSING_TYPE": "주거 유형 조건",
+    "DEPOSIT_LIMIT": "보증금 한도 조건",
+    "MONTHLY_RENT_LIMIT": "월세 한도 조건",
+    "PRIORITY_REQUIREMENTS": "우선순위 요건",
+    "ADDITIONAL_CONDITIONS": "추가 자격 조건",
+}
+
 
 def _won(value: Any) -> str:
     if isinstance(value, (int, float)):
@@ -35,6 +52,10 @@ def _schedule(candidate: ActionCandidate) -> Optional[Any]:
     return None
 
 
+def _condition_label(code: str) -> str:
+    return _CONDITION_LABELS.get(code, code)
+
+
 def _first_condition_message(candidate: ActionCandidate) -> str:
     for detail in candidate.context.get("condition_details", []):
         if detail.get("message"):
@@ -44,7 +65,7 @@ def _first_condition_message(candidate: ActionCandidate) -> str:
         or candidate.context.get("missing_conditions")
         or []
     )
-    return ", ".join(str(condition) for condition in conditions)
+    return ", ".join(_condition_label(str(c)) for c in conditions)
 
 
 _BASIS_PHASE: dict[str, int] = {
