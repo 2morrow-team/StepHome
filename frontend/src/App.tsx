@@ -557,6 +557,13 @@ function PlanDashboard({ plan }: { plan: PlanResponse }) {
 
   const handleStatusChange = (actionId: number, status: 'complete' | 'incomplete') => {
     setActionCompleted(plan.plan_id, actionId, status === 'complete')
+    if (status === 'complete' && selectedPhase < 4) {
+      const newCompleted = new Set(completedIds)
+      newCompleted.add(actionId)
+      const phaseActions = actions.filter((item) => item.phase === selectedPhase)
+      const phaseAllDone = phaseActions.length > 0 && phaseActions.every((item) => newCompleted.has(item.action.action_id))
+      if (phaseAllDone) setSelectedPhase((selectedPhase + 1) as Phase)
+    }
   }
 
   return (
