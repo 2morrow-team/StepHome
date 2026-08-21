@@ -431,6 +431,7 @@ class PlanService:
             current_policies=current_matches,
             current_user=current_user,
             current_target=current_target,
+            completed_action_ids=request.completed_action_ids,
         )
 
         # ---------------------------------------------

@@ -182,6 +182,8 @@ def build_replan_prompt(
 - 변경 전/후 차이를 summary에 반영
 - 정책 상태 변화(예: CONDITIONAL→AVAILABLE)가 있다면 summary와 Action에 반영
 - 이전 Action Plan을 참고해 변경된 상황에 맞게 우선순위 재조정
+- previous.actions에서 completed=true인 항목은 이미 완료된 행동이므로 새 플랜에 동일한 내용으로 재생성하지 않음
+- 완료된 항목은 summary에 간략히 언급하고, 아직 미완료된 항목과 새로 필요한 행동 위주로 플랜 구성
 
 {_OUTPUT_FORMAT}"""
     return _SYSTEM_PROMPT, user
@@ -254,8 +256,10 @@ def build_replan_ai_input(
     current_policies: list[dict[str, Any]],
     current_user: Optional[dict[str, Any]] = None,
     current_target: Optional[dict[str, Any]] = None,
+    completed_action_ids: Optional[list[int]] = None,
 ) -> dict[str, Any]:
     action_context_fields = (
+        "action_id",
         "priority",
         "action_type",
         "timing",
@@ -265,6 +269,7 @@ def build_replan_ai_input(
         "policy_id",
         "due_date",
     )
+    completed_set = set(completed_action_ids or [])
     return {
         "changed_fields": changed_fields,
         "previous": {
@@ -274,7 +279,7 @@ def build_replan_ai_input(
                 for policy in previous_policies
             ],
             "actions": [
-                {f: a[f] for f in action_context_fields if f in a}
+                {**{f: a[f] for f in action_context_fields if f in a}, "completed": a.get("action_id") in completed_set}
                 for a in previous_actions
             ],
         },

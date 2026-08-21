@@ -154,6 +154,7 @@ export interface ReplanRequest {
   previous_diagnosis_id: number
   previous_plan_id: number
   changes: ReplanChanges
+  completed_action_ids?: number[]
 }
 
 export interface ReplanResponse {

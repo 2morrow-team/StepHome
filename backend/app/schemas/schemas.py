@@ -231,6 +231,7 @@ class ReplanRequest(BaseModel):
     previous_plan_id: int = Field(gt=0)
 
     changes: ReplanChanges
+    completed_action_ids: list[int] = Field(default_factory=list)
 
 
 class ScenarioConstraints(BaseModel):

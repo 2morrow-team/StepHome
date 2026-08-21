@@ -832,6 +832,7 @@ function ReplanPage({
 function AppRoutes() {
   const navigate = useNavigate()
   const { draft } = usePlanStore()
+  const completedActionIdsByPlan = useRoadmapProgressStore((state) => state.completedActionIdsByPlan)
   const [inputStep, setInputStep] = useState<1 | 2>(1)
   const [currentPlan, setCurrentPlan] = useState<PlanResponse | null>(null)
   const [scenarioResult, setScenarioResult] = useState<ScenarioResponse | null>(null)
@@ -882,22 +883,26 @@ function AppRoutes() {
   }
   const handleApplyScenario = (scenario: ScenarioOption) => {
     if (!currentPlan) return
+    const completedIds = completedActionIdsByPlan[String(currentPlan.plan_id)] ?? []
     aiReplanMutation.mutate({
       user_id: currentPlan.user_id,
       target_id: currentPlan.target_id,
       previous_diagnosis_id: currentPlan.diagnosis_id,
       previous_plan_id: currentPlan.plan_id,
       changes: scenario.changes,
+      completed_action_ids: completedIds,
     })
   }
   const handleReplanSubmit = (changes: ReplanChanges) => {
     if (!currentPlan) return
+    const completedIds = completedActionIdsByPlan[String(currentPlan.plan_id)] ?? []
     manualReplanMutation.mutate({
       user_id: currentPlan.user_id,
       target_id: currentPlan.target_id,
       previous_diagnosis_id: currentPlan.diagnosis_id,
       previous_plan_id: currentPlan.plan_id,
       changes,
+      completed_action_ids: completedIds,
     })
   }
 
