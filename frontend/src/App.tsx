@@ -264,6 +264,53 @@ function PageShell({ children }: { children: ReactNode }) {
   )
 }
 
+const LOADING_STEPS: Record<'plan' | 'replan', string[]> = {
+  plan: [
+    '사용자 정보를 분석하고 있어요...',
+    '청년 지원 정책을 검토하고 있어요...',
+    '맞춤 액션 플랜을 생성하고 있어요...',
+    '거의 다 됐어요!',
+  ],
+  replan: [
+    '변경된 조건을 반영하고 있어요...',
+    '정책 자격 상태를 재판정하고 있어요...',
+    '새 액션 플랜을 구성하고 있어요...',
+    '거의 다 됐어요!',
+  ],
+}
+
+function AiLoadingScreen({ type }: { type: 'plan' | 'replan' }) {
+  const steps = LOADING_STEPS[type]
+  const [stepIndex, setStepIndex] = useState(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setStepIndex((prev) => Math.min(prev + 1, steps.length - 1))
+    }, 4000)
+    return () => clearInterval(id)
+  }, [steps.length])
+
+  return (
+    <PageShell>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-8 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="size-12 animate-spin rounded-full border-4 border-border-default border-t-action-primary" />
+          <p className="type-heading text-text-primary">{steps[stepIndex]}</p>
+          <p className="type-body text-text-secondary">AI가 나의 상황에 맞는 플랜을 만들고 있어요</p>
+        </div>
+        <div className="flex gap-2">
+          {steps.map((_, i) => (
+            <span
+              key={i}
+              className={`h-1.5 rounded-full transition-all duration-500 ${i <= stepIndex ? 'w-6 bg-action-primary' : 'w-1.5 bg-border-default'}`}
+            />
+          ))}
+        </div>
+      </div>
+    </PageShell>
+  )
+}
+
 function PageHeader({ eyebrow, title, description, meta }: { eyebrow?: string; title: string; description: string; meta?: string }) {
   return (
     <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -905,6 +952,9 @@ function AppRoutes() {
       completed_action_ids: completedIds,
     })
   }
+
+  if (createMutation.isPending) return <AiLoadingScreen type="plan" />
+  if (aiReplanMutation.isPending || manualReplanMutation.isPending) return <AiLoadingScreen type="replan" />
 
   return (
     <Routes>
